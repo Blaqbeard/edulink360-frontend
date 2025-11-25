@@ -1,0 +1,122 @@
+import React, { useState } from "react";
+import { Search, Star, MessageSquareText } from "lucide-react";
+
+// Sub-component for the filter tabs for better organization
+const FilterTabs = () => {
+  const [activeTab, setActiveTab] = useState("Groups");
+  const tabs = ["Groups", "Students", "Favorites", "Unread"];
+
+  return (
+    <div className="flex items-center space-x-2">
+      {tabs.map((tab) => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab)}
+          className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
+            activeTab === tab
+              ? "bg-gray-800 text-white"
+              : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+          }`}
+        >
+          {tab}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+// Sub-component for a single conversation item to keep the main component clean
+const ConversationItem = ({ convo, isActive, onClick }) => (
+  <button
+    onClick={onClick}
+    className={`w-full text-left p-4 flex space-x-4 items-start border-b transition-colors hover:bg-gray-50 ${
+      isActive ? "bg-blue-50" : ""
+    }`}
+  >
+    {/* Blue indicator for active chat */}
+    <div
+      className={`w-1 rounded-full h-12 ${
+        isActive ? "bg-blue-600" : "bg-transparent"
+      }`}
+    ></div>
+
+    {/* Avatar */}
+    <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-purple-100">
+      {/* In a real app, you'd use an <img> tag here if an image URL is available */}
+      <img src={convo.avatarUrl} alt="" className="h-6 w-6" />
+    </div>
+
+    {/* Main Content */}
+    <div className="flex-1 min-w-0">
+      <div className="flex justify-between items-center mb-1">
+        <p className="font-semibold text-gray-800 truncate">{convo.name}</p>
+        <p className="text-xs text-gray-500 flex-shrink-0">{convo.time}</p>
+      </div>
+
+      {/* Teacher/Sender Name */}
+      <div className="mb-2">
+        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+          {convo.sender}
+        </span>
+      </div>
+
+      {/* Last Message Line with Icons */}
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-2 text-sm text-gray-500 truncate">
+          <MessageSquareText size={16} className="flex-shrink-0" />
+          <p className="truncate">{convo.lastMessage}</p>
+        </div>
+        <div className="flex items-center space-x-2 flex-shrink-0">
+          {convo.unreadCount > 0 && (
+            <div className="h-5 w-5 flex items-center justify-center bg-blue-600 text-white text-xs rounded-full font-bold">
+              {convo.unreadCount}
+            </div>
+          )}
+          {convo.isStarred && (
+            <Star size={16} className="text-yellow-500 fill-current" />
+          )}
+        </div>
+      </div>
+    </div>
+  </button>
+);
+
+// Main Component
+export default function ConversationsList({
+  conversations,
+  activeConversationId,
+  setActiveConversationId,
+}) {
+  return (
+    <div className="w-full md:w-[360px] h-full border-r bg-white flex flex-col flex-shrink-0">
+      {/* Header Area */}
+      <div className="p-4 space-y-4 border-b">
+        <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+        <FilterTabs />
+        <div className="relative">
+          <Search
+            size={20}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            className="w-full border border-gray-200 rounded-lg pl-10 pr-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </div>
+
+      {/* Conversation Items List */}
+      <div className="flex-1 overflow-y-auto">
+        {conversations.map((convo) => (
+          <ConversationItem
+            key={convo.id}
+            convo={convo}
+            isActive={activeConversationId === convo.id}
+            onClick={() => setActiveConversationId(convo.id)}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}

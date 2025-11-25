@@ -1,0 +1,175 @@
+import React, { useState } from "react";
+import ConversationsList from "../components/messages/ConversationsList";
+import ChatWindow from "../components/messages/ChatWindow";
+import GroupInfoPanel from "../components/messages/GroupInfoPanel";
+
+// --- The New, Comprehensive Mock Data ---
+// This data structure now includes all the fields required by our corrected components.
+const mockConversations = [
+  {
+    id: 1,
+    name: "Web Development",
+    sender: "Mr. Aina Adewale",
+    time: "10:30 AM",
+    lastMessage: "Great work on the lab report",
+    unreadCount: 3,
+    isStarred: true,
+    avatarUrl: "/book-icon.svg", // NOTE: Place 'book-icon.svg' in your /public folder
+    currentUserInitial: "S",
+    description:
+      "Physics 101 class group for discussions, assignments, and collaborative learning.",
+    members: [
+      { id: 1, name: "Sarah Johnson", status: "online" },
+      { id: 2, name: "Mike Chen", status: "away" },
+      { id: 3, name: "Emily Davis", status: "offline" },
+      { id: 4, name: "James Wilson", status: "online" },
+    ],
+    messages: [
+      {
+        id: 1,
+        type: "text",
+        text: "Good morning everyone!",
+        time: "9:00 AM",
+        isSender: false,
+        sender: "Mr. Aina Adewale",
+      },
+      {
+        id: 2,
+        type: "text",
+        text: "Good morning! Ready for this week's lessons",
+        time: "9:05 AM",
+        isSender: true,
+      },
+      {
+        id: 3,
+        type: "feedback",
+        time: "10:00 AM",
+        isSender: false,
+        sender: "Mr. Aina Adewale",
+        feedback: {
+          strengths:
+            "Most of you showed excellent understanding of the basics of web development.",
+          improvements:
+            "Some reports need more detailed analysis of the fundamentals.",
+          suggestions:
+            "For next time, try to include more comparative analysis with theoretical values.",
+        },
+      },
+      {
+        id: 4,
+        type: "text",
+        text: "Thank you for the detailed feedback",
+        time: "10:15 AM",
+        isSender: true,
+      },
+      {
+        id: 5,
+        type: "text",
+        text: "Great work on the reports everyone!",
+        time: "10:30 AM",
+        isSender: false,
+        sender: "Mr. Aina Adewale",
+      },
+      {
+        id: 6,
+        type: "audio",
+        time: "10:40 AM",
+        isSender: false,
+        sender: "James Wilson",
+        audio: { duration: "0:42" },
+      },
+      {
+        id: 7,
+        type: "image",
+        time: "10:55 AM",
+        isSender: true,
+        images: [
+          "/image-placeholder.png",
+          "/image-placeholder.png",
+          "/image-placeholder.png",
+        ],
+      }, // NOTE: Place a placeholder image in your /public folder
+    ],
+  },
+  {
+    id: 2,
+    name: "Data Structure",
+    sender: "Mr. Aina Adewale",
+    time: "Yesterday",
+    lastMessage: "Don't forget the quiz on Friday",
+    unreadCount: 0,
+    isStarred: true,
+    avatarUrl: "/book-icon.svg",
+    currentUserInitial: "S",
+    description: "Data Structure discussions and problem-solving.",
+    members: [{ id: 1, name: "Alex Ray", status: "online" }],
+    messages: [
+      {
+        id: 1,
+        type: "text",
+        text: "Don't forget the quiz on Friday",
+        time: "Yesterday",
+        isSender: false,
+        sender: "Mr. Aina Adewale",
+      },
+    ],
+  },
+  {
+    id: 3,
+    name: "UX Research 101",
+    sender: "Ms Emily Uyai",
+    time: "2 days ago",
+    lastMessage: "UX research guidelines attached",
+    unreadCount: 0,
+    isStarred: false,
+    avatarUrl: "/book-icon.svg",
+    currentUserInitial: "S",
+    description: "All about UX research methodologies and practices.",
+    members: [{ id: 1, name: "Jane Doe", status: "offline" }],
+    messages: [
+      {
+        id: 1,
+        type: "text",
+        text: "UX research guidelines attached",
+        time: "2 days ago",
+        isSender: false,
+        sender: "Ms Emily Uyai",
+      },
+    ],
+  },
+];
+
+export default function Messages() {
+  const [conversations, setConversations] = useState(mockConversations);
+  const [activeConversationId, setActiveConversationId] = useState(1);
+
+  // 1. Add the new state to control the GroupInfoPanel's visibility
+  const [isInfoPanelOpen, setIsInfoPanelOpen] = useState(false);
+
+  const activeConversation = conversations.find(
+    (c) => c.id === activeConversationId
+  );
+
+  return (
+    // 2. Add 'relative' to the container to allow absolute positioning of the panel
+    <div className="flex h-full w-full relative overflow-hidden">
+      <ConversationsList
+        conversations={conversations}
+        activeConversationId={activeConversationId}
+        setActiveConversationId={setActiveConversationId}
+      />
+      <ChatWindow
+        conversation={activeConversation}
+        // 3. Pass the function to open the panel and the panel's current state
+        onHeaderClick={() => setIsInfoPanelOpen(true)}
+        isPanelOpen={isInfoPanelOpen}
+      />
+      <GroupInfoPanel
+        conversation={activeConversation}
+        // 4. Pass the state and the function to close the panel
+        isOpen={isInfoPanelOpen}
+        onClose={() => setIsInfoPanelOpen(false)}
+      />
+    </div>
+  );
+}
