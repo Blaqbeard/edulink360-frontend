@@ -1,0 +1,150 @@
+import React, { useState } from "react";
+import {
+  Pin,
+  UserPlus,
+  Settings,
+  ArrowLeft,
+  FileText,
+  MessageSquare,
+  Image,
+  Cog,
+} from "lucide-react";
+
+// Sub-component for the tabs below the header
+const InfoTabs = () => {
+  const [activeTab, setActiveTab] = useState("Overview");
+  const tabs = [
+    { name: "Overview", icon: <FileText size={18} /> },
+    { name: "Feedback", icon: <MessageSquare size={18} /> },
+    { name: "Media", icon: <Image size={18} /> },
+    { name: "Settings", icon: <Cog size={18} /> },
+  ];
+
+  return (
+    <div className="w-full border-b">
+      <div className="flex items-center justify-around">
+        {tabs.map((tab) => (
+          <button
+            key={tab.name}
+            onClick={() => setActiveTab(tab.name)}
+            className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
+              activeTab === tab.name
+                ? "text-blue-600 border-b-2 border-blue-600"
+                : "text-gray-500 hover:text-gray-700"
+            }`}
+          >
+            {tab.icon}
+            <span>{tab.name}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+// Sub-component for a single member in the list
+const MemberItem = ({ member }) => {
+  const statusColors = {
+    online: "bg-green-500",
+    away: "bg-yellow-500",
+    offline: "bg-gray-300",
+  };
+
+  return (
+    <div className="flex items-center justify-between">
+      <div className="flex items-center space-x-3">
+        <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-semibold">
+          {member.name.charAt(0)}
+        </div>
+        <p className="font-medium text-gray-800">{member.name}</p>
+      </div>
+      <div
+        className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status]}`}
+      ></div>
+    </div>
+  );
+};
+
+// Main Component
+export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
+  // If the panel is not open, render nothing.
+  if (!isOpen) {
+    return null;
+  }
+
+  // If there's no active conversation, show a fallback (though this case is unlikely if isOpen is true)
+  if (!conversation) {
+    return (
+      <div className="absolute inset-0 z-20 bg-white lg:relative lg:w-1/4 lg:border-l p-6">
+        <button onClick={onClose} className="lg:hidden mb-4">
+          <ArrowLeft />
+        </button>
+        <p>No conversation selected.</p>
+      </div>
+    );
+  }
+
+  return (
+    // This div is the main container. It's positioned absolutely on mobile/tablet
+    // and relatively on desktop.
+    <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
+      {/* Top bar with back arrow for mobile */}
+      <div className="p-4 border-b lg:hidden">
+        <button onClick={onClose} className="text-gray-600">
+          <ArrowLeft size={24} />
+        </button>
+      </div>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-y-auto p-6">
+        {/* Group Header */}
+        <div className="flex flex-col items-center text-center pb-6">
+          <div className="h-20 w-20 mb-4 flex items-center justify-center rounded-full bg-purple-100">
+            <img src={conversation.avatarUrl} alt="" className="h-8 w-8" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900">
+            {conversation.name}
+          </h2>
+          <p className="text-sm text-gray-500">
+            {conversation.members.length} members
+          </p>
+          <div className="flex items-center space-x-6 mt-4 text-gray-500">
+            <button className="hover:text-gray-800">
+              <Pin size={20} />
+            </button>
+            <button className="hover:text-gray-800">
+              <UserPlus size={20} />
+            </button>
+            <button className="hover:text-gray-800">
+              <Settings size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Tab Navigation */}
+        <InfoTabs />
+
+        {/* Tab Content (Currently only showing "Overview") */}
+        <div className="py-6 space-y-6">
+          {/* Description Section */}
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-2">Description</h3>
+            <p className="text-sm text-gray-600">{conversation.description}</p>
+          </div>
+
+          {/* Members List Section */}
+          <div>
+            <h3 className="font-semibold text-gray-800 mb-4">
+              Members ({conversation.members.length})
+            </h3>
+            <div className="space-y-4">
+              {conversation.members.map((member) => (
+                <MemberItem key={member.id} member={member} />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
