@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { dashboardService } from "../services/dashboardService";
+import { teacherService } from "../services/teacherService";
 import { authService } from "../services/authService";
 
 function TeacherDashboard() {
@@ -16,6 +17,14 @@ function TeacherDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [teacherClasses, setTeacherClasses] = useState([]);
+  const [assignmentForm, setAssignmentForm] = useState({
+    title: "",
+    description: "",
+    dueDate: "",
+  });
+  const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
+  const [assignmentStatus, setAssignmentStatus] = useState(null);
   const user = authService.getCurrentUser();
 
   const isActive = (path) => location.pathname === path;
@@ -26,20 +35,47 @@ function TeacherDashboard() {
         setIsLoading(true);
         setError(null);
 
-        const [stats, submissions, performance] = await Promise.all([
-          dashboardService.getDashboardStats().catch(() => null),
-          dashboardService.getRecentSubmissions(5).catch(() => []),
-          dashboardService.getClassPerformance().catch(() => null),
+        const [dashboardSummary, classesResponse] = await Promise.all([
+          dashboardService.getTeacherDashboard().catch(() => null),
+          teacherService.getClasses().catch(() => []),
         ]);
+
+        const classList = Array.isArray(classesResponse)
+          ? classesResponse
+          : classesResponse?.classes ?? [];
+        setTeacherClasses(classList);
+
+        const totalClasses =
+          dashboardSummary?.totalClasses ?? classList.length ?? 0;
+
+        const stats = {
+          totalStudents: dashboardSummary?.totalStudents ?? 0,
+          pendingReviews:
+            dashboardSummary?.pendingReviews ??
+            dashboardSummary?.pendingAssignments ??
+            0,
+          progressRate: dashboardSummary?.progressRate ?? 0,
+          totalClasses,
+        };
+
+        const classPerformance = {
+          completionPercentage:
+            dashboardSummary?.completionPercentage ??
+            dashboardSummary?.progressRate ??
+            0,
+          completed: dashboardSummary?.completedClasses ?? 0,
+          inProgress: dashboardSummary?.inProgressClasses ?? 0,
+          total: totalClasses,
+        };
 
         setDashboardData({
           stats,
-          recentSubmissions: submissions.data || submissions || [],
-          classPerformance: performance,
+          recentSubmissions: dashboardSummary?.recentSubmissions ?? [],
+          classPerformance,
         });
       } catch (err) {
         setError(err.message || "Failed to load dashboard data");
-        console.error("Dashboard error:", err);
+        console.error("Teacher dashboard error:", err);
       } finally {
         setIsLoading(false);
       }
@@ -47,6 +83,58 @@ function TeacherDashboard() {
 
     fetchDashboardData();
   }, []);
+
+  const handleAssignmentFormChange = (e) => {
+    const { name, value } = e.target;
+    setAssignmentForm((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleCreateAssignment = async (e) => {
+    e.preventDefault();
+    setAssignmentStatus(null);
+    setIsCreatingAssignment(true);
+
+    try {
+      const payload = {
+        title: assignmentForm.title.trim(),
+        description: assignmentForm.description.trim(),
+        dueDate: assignmentForm.dueDate ? new Date(assignmentForm.dueDate).toISOString() : undefined,
+      };
+
+      if (!payload.title || !payload.description) {
+        setAssignmentStatus({
+          type: "error",
+          message: "Please provide both a title and description.",
+        });
+        setIsCreatingAssignment(false);
+        return;
+      }
+
+      await teacherService.createAssignment(payload);
+      setAssignmentStatus({
+        type: "success",
+        message: "Assignment created successfully!",
+      });
+      setAssignmentForm({
+        title: "",
+        description: "",
+        dueDate: "",
+      });
+    } catch (err) {
+      setAssignmentStatus({
+        type: "error",
+        message:
+          err?.message ||
+          err?.error ||
+          "Failed to create assignment. Please try again.",
+      });
+    } finally {
+      setIsCreatingAssignment(false);
+    }
+  };
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -435,6 +523,126 @@ function TeacherDashboard() {
                     <p className="text-gray-400 text-sm">Total</p>
                   </div>
                 </div>
+              </div>
+
+              {/* Classes Overview */}
+              <div className="bg-white rounded-lg p-6 shadow-sm animate-[fadeInUp_0.6s_ease-out_0.45s_both]">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">My Classes</h2>
+                    <p className="text-sm text-gray-500">
+                      {teacherClasses.length} active {teacherClasses.length === 1 ? "class" : "classes"}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => navigate("/teacher/messages")}
+                    className="px-4 py-2 bg-[#0b1633] text-white rounded-lg text-sm font-semibold hover:bg-[#1A2332] transition-all duration-200"
+                  >
+                    Contact Students
+                  </button>
+                </div>
+                {teacherClasses.length === 0 ? (
+                  <div className="text-center py-10 text-gray-500 border border-dashed border-gray-200 rounded-lg">
+                    <p>No classes found.</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {teacherClasses.slice(0, 4).map((cls) => (
+                      <div
+                        key={cls.id}
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <h3 className="text-lg font-semibold text-[#0b1633]">
+                            {cls.name || "Unnamed Class"}
+                          </h3>
+                          <span className="text-xs px-2 py-0.5 bg-[#00B4D8]/10 text-[#00B4D8] rounded-full">
+                            {cls.students?.length || 0} students
+                          </span>
+                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {cls.description || "No description provided."}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Quick Assignment Creation */}
+              <div className="bg-white rounded-lg p-6 shadow-sm animate-[fadeInUp_0.6s_ease-out_0.5s_both]">
+                <h2 className="text-xl font-bold text-gray-900 mb-2">
+                  Create Assignment
+                </h2>
+                <p className="text-sm text-gray-500 mb-4">
+                  Post assignments quickly to keep your students engaged.
+                </p>
+                {assignmentStatus && (
+                  <div
+                    className={`mb-4 px-4 py-2 rounded ${
+                      assignmentStatus.type === "success"
+                        ? "bg-green-50 text-green-700 border border-green-100"
+                        : "bg-red-50 text-red-600 border border-red-100"
+                    }`}
+                  >
+                    {assignmentStatus.message}
+                  </div>
+                )}
+                <form
+                  className="space-y-4"
+                  onSubmit={handleCreateAssignment}
+                >
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      name="title"
+                      value={assignmentForm.title}
+                      onChange={handleAssignmentFormChange}
+                      placeholder="e.g., Physics Project"
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      name="description"
+                      value={assignmentForm.description}
+                      onChange={handleAssignmentFormChange}
+                      rows={3}
+                      placeholder="Provide clear instructions for your students..."
+                      className="w-full px-4 py-2.5 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent"
+                      required
+                    ></textarea>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-900 mb-1">
+                      Due Date (optional)
+                    </label>
+                    <input
+                      type="datetime-local"
+                      name="dueDate"
+                      value={assignmentForm.dueDate}
+                      onChange={handleAssignmentFormChange}
+                      className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Leave blank to use the default backend due date (7 days).
+                    </p>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={isCreatingAssignment}
+                    className="w-full bg-[#0b1633] text-white py-3 rounded-lg font-semibold hover:bg-[#1A2332] transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isCreatingAssignment ? "Creating..." : "Create Assignment"}
+                  </button>
+                </form>
               </div>
 
               {/* Recent Submissions */}
