@@ -27,8 +27,10 @@ export default function AppRoutes() {
       {/* AUTH PAGES - PUBLIC */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<Signup />} />
       </Route>
+      
+      {/* SIGNUP PAGE - Standalone with its own layout */}
+      <Route path="/signup" element={<Signup />} />
 
       {/* STUDENT APP PAGES - Protected for students only */}
       <Route
