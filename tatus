@@ -1,0 +1,4 @@
+[33mc7fb3c6[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mintegration/student-teacher-merge[m[33m)[m Merge feature/teacher-dashboard into integration branch - Integrated student and teacher features with unified routing, API config, and contexts
+[33m7d95809[m[33m ([m[1;31morigin/feature/teacher-dashboard[m[33m, [m[1;32mfeature/teacher-dashboard[m[33m)[m feat: Add teacher dashboard, messages, profile, settings, and notifications pages with backend integration
+[33mad344a5[m[33m ([m[1;31morigin/students-part[m[33m, [m[1;32mstudents-part[m[33m)[m Completed login page with validation and cleanup
+[33m570d80a[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m Initial commit: Project setup with Signup page and routing configuration

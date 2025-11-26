@@ -1,5 +1,6 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
+import ProtectedRoute from "./ProtectedRoute";
 
 // Layouts
 import AppLayout from "../components/layout/AppLayout";
@@ -29,16 +30,30 @@ export default function AppRoutes() {
         <Route path="/signup" element={<Signup />} />
       </Route>
 
-      {/* STUDENT APP PAGES */}
-      <Route path="/" element={<AppLayout />}>
+      {/* STUDENT APP PAGES - Protected for students only */}
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route index element={<Dashboard />} />
         <Route path="messages" element={<Messages />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
       </Route>
 
-      {/* TEACHER APP PAGES */}
-      <Route path="/teacher" element={<AppLayout />}>
+      {/* TEACHER APP PAGES - Protected for teachers only */}
+      <Route
+        path="/teacher"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <AppLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="dashboard" element={<TeacherDashboard />} />
         <Route path="messages" element={<TeacherMessages />} />
         <Route path="profile" element={<TeacherProfile />} />

@@ -18,18 +18,37 @@ const useMediaQuery = (query) => {
 
 // Function to get the correct page title based on the URL
 const getPageTitle = (pathname, user) => {
-  const name = user?.fullName?.split(" ")[0] || "";
-  switch (pathname) {
-    case "/":
-      return `Welcome back, ${name} 👋`;
-    case "/messages":
-      return "Messages";
-    case "/profile":
-      return "Profile";
-    case "/settings":
-      return "Account";
-    default:
-      return "Dashboard";
+  const name = user?.fullName?.split(" ")[0] || user?.name?.split(" ")[0] || "";
+  const isTeacherRoute = pathname.startsWith("/teacher");
+  
+  if (isTeacherRoute) {
+    switch (pathname) {
+      case "/teacher/dashboard":
+        return `Welcome back, ${name} 👋`;
+      case "/teacher/messages":
+        return "Messages";
+      case "/teacher/profile":
+        return "Profile";
+      case "/teacher/settings":
+        return "Settings";
+      case "/teacher/notifications":
+        return "Notifications";
+      default:
+        return "Dashboard";
+    }
+  } else {
+    switch (pathname) {
+      case "/":
+        return `Welcome back, ${name} 👋`;
+      case "/messages":
+        return "Messages";
+      case "/profile":
+        return "Profile";
+      case "/settings":
+        return "Account";
+      default:
+        return "Dashboard";
+    }
   }
 };
 

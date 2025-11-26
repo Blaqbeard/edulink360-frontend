@@ -25,7 +25,7 @@ function TeacherDashboard() {
       try {
         setIsLoading(true);
         setError(null);
-        
+
         const [stats, submissions, performance] = await Promise.all([
           dashboardService.getDashboardStats().catch(() => null),
           dashboardService.getRecentSubmissions(5).catch(() => []),
@@ -361,146 +361,153 @@ function TeacherDashboard() {
                         {dashboardData.stats?.progressRate || 0}
                       </h3>
                       <p className="text-sm font-medium text-[#203875]">
-                    Progress Rate
-                  </p>
-                  <p className="text-xs text-gray-500 mt-1">
-                    Average Class Performance
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Overall Class Performance */}
-          <div className="bg-[#0857bf] rounded-lg p-6 animate-[fadeInUp_0.6s_ease-out_0.4s_both] hover:shadow-xl transition-shadow duration-300">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-bold text-white">
-                  Overall Class Performance
-                </h2>
-                <p className="text-white/80 text-sm mt-1">
-                  Overall Completion Status
-                </p>
-              </div>
-              <div className="w-10 h-10 bg-[#00B4D8] rounded flex items-center justify-center">
-                <i className="bi bi-graph-up text-white text-lg"></i>
-              </div>
-            </div>
-
-            {/* Progress Section */}
-            <div className="mb-6">
-              <div className="flex items-center gap-3 mb-2">
-                <span className="text-white text-sm font-medium">
-                  Completed
-                </span>
-                <div className="flex-1 relative">
-                  <div className="w-full bg-blue-400 rounded-full h-3">
-                    <div
-                      className="bg-white rounded-full h-3 transition-all duration-500"
-                      style={{ 
-                        width: `${dashboardData.classPerformance?.completionPercentage || 0}%` 
-                      }}
-                    ></div>
+                        Progress Rate
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Average Class Performance
+                      </p>
+                    </div>
                   </div>
                 </div>
-                <span className="text-white text-sm font-medium">
-                  {dashboardData.classPerformance?.completionPercentage || 0}%
-                </span>
               </div>
-            </div>
 
-            {/* Breakdown */}
-            <div className="grid grid-cols-3 gap-4">
-              <div>
-                <p className="text-white text-2xl font-bold">
-                  {dashboardData.classPerformance?.completed || 0}
-                </p>
-                <p className="text-gray-400 text-sm">Completed</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-bold">
-                  {dashboardData.classPerformance?.inProgress || 0}
-                </p>
-                <p className="text-gray-400 text-sm">In Progress</p>
-              </div>
-              <div>
-                <p className="text-white text-2xl font-bold">
-                  {dashboardData.classPerformance?.total || 0}
-                </p>
-                <p className="text-gray-400 text-sm">Total</p>
-              </div>
-            </div>
-          </div>
-
-          {/* Recent Submissions */}
-          <div className="animate-[fadeInUp_0.6s_ease-out_0.5s_both]">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">
-                Recent Submissions
-              </h2>
-              <a
-                href="#"
-                className="text-[#00B4D8] text-sm font-medium hover:underline transition-all duration-200"
-              >
-                View All →
-              </a>
-            </div>
-
-            <div className="space-y-3">
-              {dashboardData.recentSubmissions.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <p>No recent submissions</p>
+              {/* Overall Class Performance */}
+              <div className="bg-[#0857bf] rounded-lg p-6 animate-[fadeInUp_0.6s_ease-out_0.4s_both] hover:shadow-xl transition-shadow duration-300">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      Overall Class Performance
+                    </h2>
+                    <p className="text-white/80 text-sm mt-1">
+                      Overall Completion Status
+                    </p>
+                  </div>
+                  <div className="w-10 h-10 bg-[#00B4D8] rounded flex items-center justify-center">
+                    <i className="bi bi-graph-up text-white text-lg"></i>
+                  </div>
                 </div>
-              ) : (
-                dashboardData.recentSubmissions.map((submission, index) => {
-                  const initials = submission.studentName
-                    ?.split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .substring(0, 2) || "ST";
-                  const statusColors = {
-                    pending: "bg-[#FF8A56]",
-                    submitted: "bg-[#283447]",
-                    reviewed: "bg-green-500",
-                  };
-                  return (
-                    <div
-                      key={submission.id || index}
-                      className="bg-gray-50 border-l-4 border-l-[#0857bf] rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 hover:translate-x-1"
-                    >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-[#FF8A56] rounded-full flex items-center justify-center shrink-0">
-                          <span className="text-white font-bold text-sm">
-                            {initials}
+
+                {/* Progress Section */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-white text-sm font-medium">
+                      Completed
+                    </span>
+                    <div className="flex-1 relative">
+                      <div className="w-full bg-blue-400 rounded-full h-3">
+                        <div
+                          className="bg-white rounded-full h-3 transition-all duration-500"
+                          style={{
+                            width: `${
+                              dashboardData.classPerformance
+                                ?.completionPercentage || 0
+                            }%`,
+                          }}
+                        ></div>
+                      </div>
+                    </div>
+                    <span className="text-white text-sm font-medium">
+                      {dashboardData.classPerformance?.completionPercentage ||
+                        0}
+                      %
+                    </span>
+                  </div>
+                </div>
+
+                {/* Breakdown */}
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {dashboardData.classPerformance?.completed || 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">Completed</p>
+                  </div>
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {dashboardData.classPerformance?.inProgress || 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">In Progress</p>
+                  </div>
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {dashboardData.classPerformance?.total || 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">Total</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Submissions */}
+              <div className="animate-[fadeInUp_0.6s_ease-out_0.5s_both]">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-bold text-gray-900">
+                    Recent Submissions
+                  </h2>
+                  <a
+                    href="#"
+                    className="text-[#00B4D8] text-sm font-medium hover:underline transition-all duration-200"
+                  >
+                    View All →
+                  </a>
+                </div>
+
+                <div className="space-y-3">
+                  {dashboardData.recentSubmissions.length === 0 ? (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No recent submissions</p>
+                    </div>
+                  ) : (
+                    dashboardData.recentSubmissions.map((submission, index) => {
+                      const initials =
+                        submission.studentName
+                          ?.split(" ")
+                          .map((n) => n[0])
+                          .join("")
+                          .toUpperCase()
+                          .substring(0, 2) || "ST";
+                      const statusColors = {
+                        pending: "bg-[#FF8A56]",
+                        submitted: "bg-[#283447]",
+                        reviewed: "bg-green-500",
+                      };
+                      return (
+                        <div
+                          key={submission.id || index}
+                          className="bg-gray-50 border-l-4 border-l-[#0857bf] rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 hover:translate-x-1"
+                        >
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-[#FF8A56] rounded-full flex items-center justify-center shrink-0">
+                              <span className="text-white font-bold text-sm">
+                                {initials}
+                              </span>
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">
+                                {submission.studentName || "Student"}
+                              </h3>
+                              <p className="text-sm text-gray-500">
+                                {submission.subject ||
+                                  submission.assignmentName}
+                              </p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {submission.dueDate || submission.submittedAt}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`px-3 py-1.5 ${
+                              statusColors[submission.status?.toLowerCase()] ||
+                              statusColors.pending
+                            } text-white text-xs font-medium rounded`}
+                          >
+                            {submission.status || "Pending"}
                           </span>
                         </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">
-                            {submission.studentName || "Student"}
-                          </h3>
-                          <p className="text-sm text-gray-500">
-                            {submission.subject || submission.assignmentName}
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            {submission.dueDate || submission.submittedAt}
-                          </p>
-                        </div>
-                      </div>
-                      <span
-                        className={`px-3 py-1.5 ${
-                          statusColors[submission.status?.toLowerCase()] ||
-                          statusColors.pending
-                        } text-white text-xs font-medium rounded`}
-                      >
-                        {submission.status || "Pending"}
-                      </span>
-                    </div>
-                  );
-                })
-              )}
-            </div>
-          </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
             </>
           )}
         </main>

@@ -1,6 +1,6 @@
 // src/components/layout/Sidebar.js
 import React from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, Link, useLocation } from "react-router-dom";
 import {
   LuLayoutDashboard,
   LuMessageSquare,
@@ -9,18 +9,34 @@ import {
   LuSettings,
   LuLogOut,
 } from "react-icons/lu";
+import { useAuth } from "../../context/AuthContext";
 import logo from "../../assets/images/logo.jpg";
 import smallLogo from "../../assets/images/logo.jpg"; // A smaller version of the logo for the slim sidebar
 
-const navLinks = [
+// Student navigation links
+const studentNavLinks = [
   { to: "/", text: "Dashboard", icon: <LuLayoutDashboard /> },
   { to: "/messages", text: "Messages", icon: <LuMessageSquare /> },
   { to: "/feedbacks", text: "Feedbacks", icon: <LuFileText /> },
   { to: "/notifications", text: "Notifications", icon: <LuBell /> },
 ];
 
+// Teacher navigation links
+const teacherNavLinks = [
+  { to: "/teacher/dashboard", text: "Dashboard", icon: <LuLayoutDashboard /> },
+  { to: "/teacher/messages", text: "Messages", icon: <LuMessageSquare /> },
+  { to: "/teacher/notifications", text: "Notifications", icon: <LuBell /> },
+];
+
 // isSlim is for the tablet view, isSidebarOpen is for the mobile view
 export default function Sidebar({ isSlim, isSidebarOpen, setIsSidebarOpen }) {
+  const { user } = useAuth();
+  const location = useLocation();
+  const isTeacherRoute = location.pathname.startsWith("/teacher");
+  const userRole = user?.role || (isTeacherRoute ? "teacher" : "student");
+  const navLinks = userRole === "teacher" ? teacherNavLinks : studentNavLinks;
+  const settingsPath = userRole === "teacher" ? "/teacher/settings" : "/settings";
+  
   const activeLinkStyle = {
     backgroundColor: "#2563EB",
     color: "white",
@@ -51,7 +67,7 @@ export default function Sidebar({ isSlim, isSidebarOpen, setIsSidebarOpen }) {
             isSlim ? "justify-center" : "justify-start"
           }`}
         >
-          <Link to="/">
+          <Link to={userRole === "teacher" ? "/teacher/dashboard" : "/"}>
             <img
               src={isSlim ? smallLogo : logo}
               alt="EduLink360 Logo"
@@ -86,7 +102,7 @@ export default function Sidebar({ isSlim, isSidebarOpen, setIsSidebarOpen }) {
           }`}
         >
           <NavLink
-            to="/settings"
+            to={settingsPath}
             style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
             className={`flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
               isSlim ? "justify-center" : ""
