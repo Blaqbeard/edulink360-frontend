@@ -3,7 +3,6 @@ import ConversationsList from "../components/messages/ConversationsList";
 import ChatWindow from "../components/messages/ChatWindow";
 import GroupInfoPanel from "../components/messages/GroupInfoPanel";
 
-// --- The New, Comprehensive Mock Data ---
 // This data structure now includes all the fields required by our corrected components.
 const mockConversations = [
   {
@@ -88,7 +87,7 @@ const mockConversations = [
           "/image-placeholder.png",
           "/image-placeholder.png",
         ],
-      }, // NOTE: Place a placeholder image in your /public folder
+      },
     ],
   },
   {
@@ -143,7 +142,6 @@ export default function Messages() {
   const [conversations, setConversations] = useState(mockConversations);
   const [activeConversationId, setActiveConversationId] = useState(1);
 
-  // 1. Add the new state to control the GroupInfoPanel's visibility
   const [isInfoPanelOpen, setIsInfoPanelOpen] = useState(false);
 
   const activeConversation = conversations.find(
@@ -151,7 +149,6 @@ export default function Messages() {
   );
 
   return (
-    // 2. Add 'relative' to the container to allow absolute positioning of the panel
     <div className="flex h-full w-full relative overflow-hidden">
       <ConversationsList
         conversations={conversations}
@@ -160,13 +157,11 @@ export default function Messages() {
       />
       <ChatWindow
         conversation={activeConversation}
-        // 3. Pass the function to open the panel and the panel's current state
         onHeaderClick={() => setIsInfoPanelOpen(true)}
         isPanelOpen={isInfoPanelOpen}
       />
       <GroupInfoPanel
         conversation={activeConversation}
-        // 4. Pass the state and the function to close the panel
         isOpen={isInfoPanelOpen}
         onClose={() => setIsInfoPanelOpen(false)}
       />

@@ -1,17 +1,15 @@
 import React from "react";
 
 /**
- * A reusable, styled input field component with a label.
- *
  * @param {object} props
- * @param {string} props.label - The text to display in the label above the input.
- * @param {string} props.id - A unique ID for the input, used to link the label correctly.
- * @param {string} props.type - The type of the input (e.g., 'text', 'email', 'password').
- * @param {string} props.value - The current value of the input.
- * @param {function} props.onChange - The function to call when the input's value changes.
- * @param {string} [props.placeholder] - The placeholder text for the input.
- * @param {boolean} [props.disabled=false] - Whether the input should be disabled.
- * @param {string} [props.className] - Optional additional CSS classes for the container.
+ * @param {string} props.label
+ * @param {string} props.id
+ * @param {string} props.type
+ * @param {string} props.value
+ * @param {function} props.onChange
+ * @param {string} [props.placeholder]
+ * @param {boolean} [props.disabled=false]
+ * @param {string} [props.className]
  */
 export default function Input({
   label,
@@ -38,7 +36,7 @@ export default function Input({
       <input
         type={type}
         id={id}
-        name={id} // It's good practice to have a name attribute
+        name={id}
         value={value}
         onChange={onChange}
         placeholder={placeholder}

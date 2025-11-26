@@ -49,7 +49,6 @@ export default function Login() {
 
   return (
     <div className="animate-fadeIn">
-      {/* Back Arrow */}
       <button
         onClick={() => navigate("/signup")}
         className="flex items-center text-gray-600 hover:text-gray-800 mb-6"
@@ -58,7 +57,6 @@ export default function Login() {
         Back to Sign Up
       </button>
 
-      {/* Title */}
       <h1 className="text-3xl font-bold text-gray-900">
         Welcome back to EduLink360
       </h1>
@@ -66,14 +64,12 @@ export default function Login() {
         Sign in to continue to your dashboard
       </p>
 
-      {/* Error Message */}
       {error && (
         <div className="mt-4 p-3 rounded-md bg-red-100 text-red-600 text-sm border border-red-300">
           {error}
         </div>
       )}
 
-      {/* Form */}
       <form onSubmit={handleLogin} className="mt-8 space-y-6">
         <Input
           label="Email"

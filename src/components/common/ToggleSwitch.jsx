@@ -1,12 +1,11 @@
 import React from "react";
 
 /**
- * A reusable toggle switch component, controlled by a parent component.
- *
+
  * @param {object} props
- * @param {boolean} props.isOn - Whether the switch is currently in the "on" state.
- * @param {function} props.onToggle - A function to call when the switch is clicked. It should handle the state change.
- * @param {string} [props.id] - An optional ID for accessibility.
+ * @param {boolean} props.isOn 
+ * @param {function} props.onToggle 
+ * @param {string} [props.id] 
  */
 export default function ToggleSwitch({ isOn, onToggle, id }) {
   return (

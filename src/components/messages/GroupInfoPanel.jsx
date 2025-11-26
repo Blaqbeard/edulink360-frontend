@@ -85,8 +85,6 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
-    // This div is the main container. It's positioned absolutely on mobile/tablet
-    // and relatively on desktop.
     <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
       {/* Top bar with back arrow for mobile */}
       <div className="p-4 border-b lg:hidden">

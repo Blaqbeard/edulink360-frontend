@@ -46,7 +46,7 @@ export default function Settings() {
           type="email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          disabled={true} // As per the design, this field is not editable
+          disabled={true} //
         />
       </Card>
 

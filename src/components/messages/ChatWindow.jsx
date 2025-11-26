@@ -12,9 +12,6 @@ import {
   ArrowRight,
 } from "lucide-react";
 
-// --- Sub-Components for Different Message Types ---
-
-// Default text message bubble
 const TextMessage = ({ msg, conversation }) => (
   <div
     className={`flex items-end gap-2 ${

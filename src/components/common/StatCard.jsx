@@ -1,44 +1,48 @@
 import React from "react";
-import Card from "./Card"; // We are using our new Card component!
 
 /**
- * A card for displaying a single, important statistic.
- *
+ 
  * @param {object} props
- * @param {React.ReactNode} props.icon - The icon to display.
- * @param {string} props.value - The main statistic value (e.g., "80", "12").
- * @param {string} props.label - The title for the statistic (e.g., "Progress Rate").
- * @param {string} [props.subtitle] - Optional smaller text below the label.
- * @param {'blue' | 'orange' | 'green'} [props.color='blue'] - The color theme for the icon.
+ * @param {React.ReactNode} props.icon 
+ * @param {string} props.value 
+ * @param {string} props.label 
+ * @param {string} props.subLabel 
+ * @param {'blue' | 'orange' | 'green'} [props.color='blue'] 
  */
 export default function StatCard({
   icon,
   value,
   label,
-  subtitle,
+  subLabel,
   color = "blue",
 }) {
-  const colorVariants = {
+  // Define color variants for the card's background and the icon's background
+  const cardColorVariants = {
+    blue: "bg-blue-50",
+    orange: "bg-orange-50",
+    green: "bg-green-50",
+  };
+
+  const iconColorVariants = {
     blue: "bg-blue-100 text-blue-600",
     orange: "bg-orange-100 text-orange-600",
     green: "bg-green-100 text-green-600",
   };
 
   return (
-    <Card>
-      <div className="flex items-start justify-between">
-        {/* Left side: Text content */}
-        <div>
-          <p className="text-4xl font-bold text-gray-800">{value}</p>
-          <p className="text-gray-600 mt-1">{label}</p>
-          {subtitle && <p className="text-sm text-gray-400">{subtitle}</p>}
-        </div>
-
-        {/* Right side: Icon */}
-        <div className={`p-3 rounded-lg ${colorVariants[color]}`}>
-          <div className="h-6 w-6">{icon}</div>
-        </div>
+    // 1. The main container now has its own background color and doesn't use the base Card.
+    <div className={`p-6 rounded-xl ${cardColorVariants[color]}`}>
+      <div
+        className={`w-10 h-10 flex items-center justify-center rounded-lg ${iconColorVariants[color]}`}
+      >
+        {icon}
       </div>
-    </Card>
+
+      <div className="mt-4">
+        <p className="text-5xl font-bold text-gray-800">{value}</p>
+        <p className="text-md font-semibold text-gray-700 mt-2">{label}</p>
+        <p className="text-sm text-gray-500">{subLabel}</p>
+      </div>
+    </div>
   );
 }

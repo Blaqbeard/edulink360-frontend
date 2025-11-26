@@ -9,16 +9,10 @@ export const AuthProvider = ({ children }) => {
   );
   const [loading, setLoading] = useState(false);
 
-  // ---------------------------
-  // 🔐 LOGIN
-  // ---------------------------
   const login = async (email, password) => {
     setLoading(true);
     try {
       const res = await API.post("/auth/login", { email, password });
-
-      // Expecting backend response format:
-      // { token: "...", user: {...} }
 
       const token = res.data?.token;
       const userData = res.data?.user;
@@ -47,9 +41,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ---------------------------
-  // 📝 REGISTER
-  // ---------------------------
   const register = async (formData) => {
     setLoading(true);
     try {
@@ -71,9 +62,6 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  // ---------------------------
-  // 🚪 LOGOUT
-  // ---------------------------
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
