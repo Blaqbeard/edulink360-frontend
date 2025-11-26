@@ -86,17 +86,19 @@ function Signup() {
       submitData.append("password", formData.password);
       submitData.append("role", formData.role);
 
-      // Add teacher-specific fields
+      // Only add teacher-specific fields if role is "teacher"
+      // Students should NOT have these fields in FormData
       if (formData.role === "teacher") {
         submitData.append("teacherId", formData.teacherId);
         submitData.append("schoolName", formData.schoolName);
-
+        
         // Add certificate file if exists
         const certificateFile = certificateFileRef.current?.files?.[0];
         if (certificateFile) {
           submitData.append("certificate", certificateFile);
         }
       }
+      // Explicitly: For students, teacherId, schoolName, and certificate are NOT appended
 
       // 3️⃣ Call signup API
       const response = await authService.signup(submitData);
