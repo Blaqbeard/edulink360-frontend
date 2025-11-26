@@ -28,7 +28,7 @@ export default function AppRoutes() {
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
       </Route>
-      
+
       {/* SIGNUP PAGE - Standalone with its own layout */}
       <Route path="/signup" element={<Signup />} />
 
@@ -47,21 +47,47 @@ export default function AppRoutes() {
         <Route path="settings" element={<Settings />} />
       </Route>
 
-      {/* TEACHER APP PAGES - Protected for teachers only */}
+      {/* TEACHER APP PAGES - Protected for teachers only (standalone layouts) */}
       <Route
-        path="/teacher"
+        path="/teacher/dashboard"
         element={
           <ProtectedRoute allowedRoles={["teacher"]}>
-            <AppLayout />
+            <TeacherDashboard />
           </ProtectedRoute>
         }
-      >
-        <Route path="dashboard" element={<TeacherDashboard />} />
-        <Route path="messages" element={<TeacherMessages />} />
-        <Route path="profile" element={<TeacherProfile />} />
-        <Route path="settings" element={<TeacherSettings />} />
-        <Route path="notifications" element={<TeacherNotifications />} />
-      </Route>
+      />
+      <Route
+        path="/teacher/messages"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherMessages />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/profile"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherProfile />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/settings"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherSettings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/notifications"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherNotifications />
+          </ProtectedRoute>
+        }
+      />
     </Routes>
   );
 }
