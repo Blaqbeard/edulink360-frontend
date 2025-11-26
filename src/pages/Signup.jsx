@@ -18,6 +18,8 @@ function Signup() {
   const [certificateFileName, setCertificateFileName] = useState("");
   const [formError, setFormError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -45,10 +47,13 @@ function Signup() {
     if (!formData.email.trim()) return "Email is required";
     if (!/\S+@\S+\.\S+/.test(formData.email)) return "Invalid email format";
     if (!formData.password) return "Password is required";
-    if (formData.password.length < 6) return "Password must be at least 6 characters";
-    if (formData.password !== formData.confirmPassword) return "Passwords do not match";
-    if (!formData.agreeToTerms) return "You must agree to the Terms of Service and Privacy Policy";
-    
+    if (formData.password.length < 6)
+      return "Password must be at least 6 characters";
+    if (formData.password !== formData.confirmPassword)
+      return "Passwords do not match";
+    if (!formData.agreeToTerms)
+      return "You must agree to the Terms of Service and Privacy Policy";
+
     if (formData.role === "teacher") {
       if (!formData.teacherId.trim()) return "Teacher ID is required";
       if (!formData.schoolName.trim()) return "School name is required";
@@ -56,7 +61,7 @@ function Signup() {
         return "Please upload your teaching certificate for verification";
       }
     }
-    
+
     return null;
   };
 
@@ -85,7 +90,7 @@ function Signup() {
       if (formData.role === "teacher") {
         submitData.append("teacherId", formData.teacherId);
         submitData.append("schoolName", formData.schoolName);
-        
+
         // Add certificate file if exists
         const certificateFile = certificateFileRef.current?.files?.[0];
         if (certificateFile) {
@@ -97,12 +102,19 @@ function Signup() {
       const response = await authService.signup(submitData);
 
       // 4️⃣ Show success notification
-      alert(`Account created successfully! ${formData.role === "teacher" ? "Your account will be activated after credential review." : "You can now log in."}`);
+      alert(
+        `Account created successfully! ${
+          formData.role === "teacher"
+            ? "Your account will be activated after credential review."
+            : "You can now log in."
+        }`
+      );
 
       // 5️⃣ Redirect based on role
       if (response.token) {
         // Auto-login if token is returned
-        const redirectPath = formData.role === "teacher" ? "/teacher/dashboard" : "/";
+        const redirectPath =
+          formData.role === "teacher" ? "/teacher/dashboard" : "/";
         navigate(redirectPath);
       } else {
         // Redirect to login if no auto-login
@@ -110,10 +122,10 @@ function Signup() {
       }
     } catch (error) {
       // 6️⃣ Handle errors
-      const errorMessage = 
-        error?.response?.data?.message || 
-        error?.response?.data?.error || 
-        error?.message || 
+      const errorMessage =
+        error?.response?.data?.message ||
+        error?.response?.data?.error ||
+        error?.message ||
         "Registration failed. Please try again.";
       setFormError(errorMessage);
       setIsLoading(false);
@@ -464,16 +476,30 @@ function Signup() {
               >
                 Password
               </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create Password"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  placeholder="Create Password"
+                  className="w-full px-4 py-3 pr-12 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  <i
+                    className={`bi ${
+                      showPassword ? "bi-eye-slash" : "bi-eye"
+                    } text-lg`}
+                  ></i>
+                </button>
+              </div>
             </div>
 
             {/* Confirm Password Field */}
@@ -484,16 +510,32 @@ function Signup() {
               >
                 Confirm Password
               </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm Password"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
+              <div className="relative">
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Confirm Password"
+                  className="w-full px-4 py-3 pr-12 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
+                  aria-label={
+                    showConfirmPassword ? "Hide password" : "Show password"
+                  }
+                >
+                  <i
+                    className={`bi ${
+                      showConfirmPassword ? "bi-eye-slash" : "bi-eye"
+                    } text-lg`}
+                  ></i>
+                </button>
+              </div>
             </div>
 
             {/* Teacher Verification Fields */}
@@ -634,7 +676,6 @@ function Signup() {
                 Log in
               </a>
             </div>
-
           </form>
         </div>
       </div>
