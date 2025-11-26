@@ -1,73 +1,81 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
+import { dashboardService } from "../services/dashboardService";
+import { authService } from "../services/authService";
 
-function Signup() {
+function TeacherDashboard() {
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    agreeToTerms: false,
-    role: "student",
-    teacherId: "",
-    schoolName: "",
+  const location = useLocation();
+  const { unreadCount } = useNotifications();
+  const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    stats: null,
+    recentSubmissions: [],
+    classPerformance: null,
   });
-  const [certificateFileName, setCertificateFileName] = useState("");
-  const [formError, setFormError] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const user = authService.getCurrentUser();
 
-  const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  };
+  const isActive = (path) => location.pathname === path;
 
-  const handleRoleChange = (role) => {
-    setFormData((prev) => ({
-      ...prev,
-      role,
-    }));
-  };
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        const [stats, submissions, performance] = await Promise.all([
+          dashboardService.getDashboardStats().catch(() => null),
+          dashboardService.getRecentSubmissions(5).catch(() => []),
+          dashboardService.getClassPerformance().catch(() => null),
+        ]);
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    setCertificateFileName(file ? file.name : "");
-  };
-
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    setFormError("");
-
-    if (formData.password !== formData.confirmPassword) {
-      setFormError("Passwords do not match.");
-      return;
-    }
-
-    if (formData.role === "teacher") {
-      if (!formData.teacherId.trim() || !formData.schoolName.trim()) {
-        setFormError("Please provide your teacher ID and school name.");
-        return;
+        setDashboardData({
+          stats,
+          recentSubmissions: submissions.data || submissions || [],
+          classPerformance: performance,
+        });
+      } catch (err) {
+        setError(err.message || "Failed to load dashboard data");
+        console.error("Dashboard error:", err);
+      } finally {
+        setIsLoading(false);
       }
-      if (!certificateFileName) {
-        setFormError(
-          "Please upload your teaching certificate for verification."
-        );
-        return;
-      }
-    }
+    };
 
-    console.log("Form submitted:", { ...formData, certificateFileName });
-    navigate("/teacher/dashboard");
-  };
+    fetchDashboardData();
+  }, []);
 
   return (
-    <div className="min-h-screen flex">
-      {/* Left Column - Dark Blue Background */}
-      <div className="hidden lg:flex lg:w-1/2 bg-[#283447] flex-col p-6 animate-[fadeInLeft_0.6s_ease-out] h-screen lg:sticky lg:top-0">
+    <div className="min-h-screen flex bg-gray-50">
+      {/* Mobile Hamburger Menu Button */}
+      <button
+        onClick={() => setShowMobileSidebar(!showMobileSidebar)}
+        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-[#0b1633] text-white rounded-lg flex items-center justify-center hover:bg-[#1A2332] transition-colors"
+      >
+        <i className="bi bi-list text-xl"></i>
+      </button>
+
+      {/* Mobile Sidebar Overlay */}
+      {showMobileSidebar && (
+        <div
+          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+          onClick={() => setShowMobileSidebar(false)}
+        ></div>
+      )}
+
+      {/* Left Sidebar - Fixed to extend full height */}
+      <div
+        className={`fixed left-0 top-0 w-64 bg-[#0b1633] flex flex-col h-screen z-40 transition-transform duration-300 ${
+          showMobileSidebar
+            ? "translate-x-0"
+            : "-translate-x-full md:translate-x-0"
+        }`}
+      >
         {/* Logo */}
-        <div className="flex items-center animate-[fadeInDown_0.8s_ease-out] shrink-0">
+        <div className="flex items-center my-3 mx-3 animate-[fadeInDown_0.8s_ease-out]">
           <div className="flex items-center px-3 py-1.5 border border-[#FF8A56] rounded hover:scale-105 transition-transform duration-300 cursor-pointer">
             <svg
               width="20"
@@ -132,7 +140,7 @@ function Signup() {
                 fill="#FF8A3D"
               />
             </svg>
-            <span>
+            <span className="hidden md:block">
               <svg
                 width="70"
                 height="20"
@@ -153,388 +161,352 @@ function Signup() {
           </div>
         </div>
 
-        {/* Content - Centered Container */}
-        <div className="flex-1 flex flex-col justify-center items-start relative">
-          <div className="w-full space-y-4">
-            {/* Headline */}
-            <div className="animate-[fadeInUp_0.8s_ease-out_0.2s_both]">
-              <h1 className="text-white text-4xl font-bold leading-tight mb-2">
-                Step into your classroom,
-                <br />
-                <span className="text-orange-400 inline-block animate-[fadeIn_0.6s_ease-out_0.5s_both]">
-                  anywhere!
-                </span>
-              </h1>
-            </div>
+        {/* Navigation */}
+        <nav className="flex-1 px-4 space-y-2">
+          {/* Dashboard - Active */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/dashboard");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/dashboard")
+                ? "bg-[#1A2332]"
+                : "hover:bg-[#1A2332] text-white/80"
+            }`}
+          >
+            <i className="bi bi-grid text-xl"></i>
+            <span className="font-medium">Dashboard</span>
+          </a>
 
-            {/* Tagline */}
-            <p className="text-white text-base animate-[fadeInUp_0.8s_ease-out_0.3s_both]">
-              Stay linked to what matters...learning!
-            </p>
+          {/* Messages */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/messages");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/messages")
+                ? "bg-[#1A2332]"
+                : "hover:bg-[#1A2332] text-white/80"
+            }`}
+          >
+            <i className="bi bi-chat-dots text-xl"></i>
+            <span className="font-medium">Messages</span>
+          </a>
 
-            {/* Features List */}
-            <div className="space-y-4">
-              {/* Feature 1: Track Your Progress */}
-              <div className="flex items-start gap-4 animate-[fadeInUp_0.6s_ease-out_0.4s_both] hover:translate-x-1 transition-transform duration-300">
-                <div className="w-12 h-12 bg-blue-700 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform duration-300">
-                  <i className="bi bi-graph-up text-white text-2xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg mb-1">
-                    Track Your Progress
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    Monitor assignments, feedback, and overall performance
-                  </p>
-                </div>
-              </div>
+          {/* Notifications */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/notifications");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/notifications")
+                ? "bg-[#1A2332]"
+                : "hover:bg-[#1A2332] text-white/80"
+            }`}
+          >
+            <i className="bi bi-bell text-xl"></i>
+            <span className="font-medium">Notifications</span>
+          </a>
+        </nav>
 
-              {/* Feature 2: Stay Connected */}
-              <div className="flex items-start gap-4 animate-[fadeInUp_0.6s_ease-out_0.5s_both] hover:translate-x-1 transition-transform duration-300">
-                <div className="w-12 h-12 bg-orange-400 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform duration-300">
-                  <i className="bi bi-people text-white text-2xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg mb-1">
-                    Stay Connected
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    Get instant notifications and feedback from teachers and
-                    students
-                  </p>
-                </div>
-              </div>
+        {/* Bottom Navigation - Settings and Logout */}
+        <div className="p-4 space-y-2 border-t border-white/10">
+          {/* Settings */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/settings");
+              setShowMobileSidebar(false);
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-gear text-xl"></i>
+            <span className="font-medium">Settings</span>
+          </a>
 
-              {/* Feature 3: Achieve Set Goals */}
-              <div className="flex items-start gap-4 animate-[fadeInUp_0.6s_ease-out_0.6s_both] hover:translate-x-1 transition-transform duration-300">
-                <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center shrink-0 hover:scale-110 transition-transform duration-300">
-                  <i className="bi bi-award text-white text-2xl"></i>
-                </div>
-                <div>
-                  <h3 className="text-white font-bold text-lg mb-1">
-                    Achieve Set Goals
-                  </h3>
-                  <p className="text-white/80 text-sm">
-                    Complete courses and unlock your potentials
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Copyright */}
-        <div className="text-white/60 text-xs animate-[fadeIn_0.8s_ease-out_0.7s_both] shrink-0">
-          © 2025 EduLink360. All rights reserved.
+          {/* Log out */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              authService.logout();
+              navigate("/signup");
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-box-arrow-right text-xl"></i>
+            <span className="font-medium">Log out</span>
+          </a>
         </div>
       </div>
 
-      {/* Right Column - White Background Signup Form */}
-      <div className="w-full lg:w-1/2 bg-white flex items-center justify-center p-4 sm:p-8 animate-[fadeInRight_0.6s_ease-out]">
-        <div className="w-full max-w-md">
-          {/* Mobile Logo */}
-          <div className="lg:hidden flex items-center mb-6 animate-[fadeInDown_0.8s_ease-out]">
-            <div className="flex items-center gap-2 px-3 py-1.5 border border-[#FF8A56] rounded hover:scale-105 transition-transform duration-300">
-              <svg
-                width="20"
-                height="20"
-                viewBox="0 0 20 20"
-                fill="none"
-                xmlns="http://www.w3.org/2000/svg"
+      {/* Main Content Area - Add left margin for fixed sidebar */}
+      <div className="flex-1 flex flex-col overflow-y-auto md:ml-64">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10 animate-[fadeInDown_0.5s_ease-out]">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Welcome back, {user?.name?.split(" ")[0] || "Teacher"}
+              </h1>
+              <p className="text-sm text-gray-500 mt-1">Teacher</p>
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Notification Bell */}
+              <div
+                onClick={() => navigate("/teacher/notifications")}
+                className="relative cursor-pointer hover:scale-110 transition-transform duration-300"
               >
-                <path
-                  d="M10 2C13.866 2 17 5.134 17 9C17 10.152 16.695 11.224 16.17 12.14L14.76 10.73C15.086 10.125 15.25 9.578 15.25 9C15.25 6.239 12.761 4 10 4C9.578 4 9.125 4.114 8.52 4.24L7.11 2.83C8.026 2.305 9.098 2 10 2Z"
-                  fill="#00B4D8"
-                />
-                <path
-                  d="M4.75 9C4.75 11.761 7.239 14 10 14C10.422 14 10.875 13.886 11.48 13.76L12.89 15.17C11.974 15.695 10.902 16 10 16C6.134 16 3 12.866 3 9C3 8.098 3.305 7.026 3.83 6.11L5.24 7.52C5.114 8.125 4.75 8.578 4.75 9Z"
-                  fill="#00B4D8"
-                />
-                <path
-                  d="M10 6C8.895 6 8 6.895 8 8C8 9.105 8.895 10 10 10C11.105 10 12 9.105 12 8C12 6.895 11.105 6 10 6Z"
-                  fill="#00B4D8"
-                />
-              </svg>
-              <div className="flex items-center">
-                <span className="text-[#00B4D8] font-bold text-lg">
-                  EduLink
+                <i className="bi bi-bell text-gray-600 text-xl hover:text-gray-900 transition-colors"></i>
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
+              </div>
+              <div
+                onClick={() => navigate("/teacher/profile")}
+                className="w-10 h-10 bg-[#FF8A56] rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer"
+              >
+                <span className="text-white font-bold text-sm">
+                  {user?.name
+                    ? user.name
+                        .split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .toUpperCase()
+                        .substring(0, 2)
+                    : "AA"}
                 </span>
-                <span className="text-gray-900 font-bold text-lg">360</span>
               </div>
             </div>
           </div>
+        </header>
 
-          {/* Form Header */}
-          <div className="mb-6 animate-[fadeInUp_0.6s_ease-out_0.2s_both]">
-            <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-              Create Your Account
-            </h2>
-            <p className="text-gray-600 text-sm">
-              Sign up to get started with your learning journey
-            </p>
-          </div>
-
-          {/* Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Name Field */}
-            <div className="animate-[fadeInUp_0.5s_ease-out_0.3s_both]">
-              <label
-                htmlFor="name"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Name
-              </label>
-              <input
-                type="text"
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter Full Name"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
+        {/* Main Content */}
+        <main className="flex-1 p-8 space-y-6">
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+              {error}
             </div>
+          )}
 
-            {/* Email Field */}
-            <div className="animate-[fadeInUp_0.5s_ease-out_0.4s_both]">
-              <label
-                htmlFor="email"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Email
-              </label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="Enter Email"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
-            </div>
-
-            {/* Role Selection */}
-            <div className="animate-[fadeInUp_0.5s_ease-out_0.45s_both]">
-              <label className="block text-sm font-medium text-gray-900 mb-2">
-                I am signing up as
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                {["student", "teacher"].map((roleOption) => (
-                  <button
-                    type="button"
-                    key={roleOption}
-                    onClick={() => handleRoleChange(roleOption)}
-                    className={`px-4 py-3 rounded-lg border transition-all duration-200 font-semibold ${
-                      formData.role === roleOption
-                        ? "bg-blue-700 text-white border-transparent shadow-lg"
-                        : "bg-white text-gray-700 border-gray-200 hover:border-[#00B4D8]"
-                    }`}
-                  >
-                    {roleOption === "student" ? "Student" : "Teacher"}
-                  </button>
-                ))}
+          {isLoading ? (
+            <div className="flex items-center justify-center h-64">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#00B4D8] mx-auto mb-4"></div>
+                <p className="text-gray-600">Loading dashboard...</p>
               </div>
-              <p className="text-xs text-gray-500 mt-2">
-                Teachers will be asked to verify their credentials to keep the
-                community secure.
-              </p>
             </div>
-
-            {/* Password Field */}
-            <div className="animate-[fadeInUp_0.5s_ease-out_0.55s_both]">
-              <label
-                htmlFor="password"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder="Create Password"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
-            </div>
-
-            {/* Confirm Password Field */}
-            <div className="animate-[fadeInUp_0.5s_ease-out_0.6s_both]">
-              <label
-                htmlFor="confirmPassword"
-                className="block text-sm font-medium text-gray-900 mb-2"
-              >
-                Confirm Password
-              </label>
-              <input
-                type="password"
-                id="confirmPassword"
-                name="confirmPassword"
-                value={formData.confirmPassword}
-                onChange={handleChange}
-                placeholder="Confirm Password"
-                className="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400 transition-all duration-300 hover:border-gray-300 hover:shadow-sm"
-                required
-              />
-            </div>
-
-            {/* Teacher Verification Fields */}
-            {formData.role === "teacher" && (
-              <div className="space-y-4 animate-[fadeInUp_0.5s_ease-out_0.65s_both] border border-blue-100 rounded-xl p-4 bg-blue-50/40">
-                <div>
-                  <label
-                    htmlFor="teacherId"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    Teacher ID / Certification Number
-                  </label>
-                  <input
-                    type="text"
-                    id="teacherId"
-                    name="teacherId"
-                    value={formData.teacherId}
-                    onChange={handleChange}
-                    placeholder="e.g. TCH-4521"
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <label
-                    htmlFor="schoolName"
-                    className="block text-sm font-medium text-gray-900 mb-2"
-                  >
-                    School / Institution
-                  </label>
-                  <input
-                    type="text"
-                    id="schoolName"
-                    name="schoolName"
-                    value={formData.schoolName}
-                    onChange={handleChange}
-                    placeholder="Enter your present school"
-                    className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:border-transparent text-gray-900 placeholder-gray-400"
-                  />
-                </div>
-
-                <div>
-                  <p className="text-sm font-medium text-gray-900 mb-2">
-                    Upload Teaching Certificate (PDF/JPG/PNG)
-                  </p>
-                  <div className="flex items-center gap-3">
-                    <label
-                      htmlFor="certificateUpload"
-                      className="px-4 py-2 bg-white border border-dashed border-[#00B4D8] text-[#00B4D8] rounded-lg cursor-pointer hover:bg-blue-50 transition-all duration-200 text-sm font-semibold"
-                    >
-                      {certificateFileName
-                        ? "Replace document"
-                        : "Upload document"}
-                    </label>
-                    {certificateFileName && (
-                      <span className="text-xs text-gray-600">
-                        {certificateFileName}
-                      </span>
-                    )}
-                    <input
-                      id="certificateUpload"
-                      type="file"
-                      accept=".pdf,.jpg,.jpeg,.png"
-                      onChange={handleFileChange}
-                      className="hidden"
-                    />
+          ) : (
+            <>
+              {/* Summary Cards */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Pending Reviews Card */}
+                <div className="bg-blue-100 rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 animate-[fadeInUp_0.6s_ease-out_0.1s_both]">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="w-12 h-12 bg-[#203875] rounded-lg flex items-center justify-center mb-4">
+                        <i className="bi bi-file-earmark-text text-white text-2xl"></i>
+                      </div>
+                      <h3 className="text-3xl font-bold text-[#203875] mb-1">
+                        {dashboardData.stats?.pendingReviews || 0}
+                      </h3>
+                      <p className="text-sm font-semibold text-[#203875]">
+                        Pending Reviews
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">Due today</p>
+                    </div>
                   </div>
-                  <p className="text-xs text-gray-500 mt-2">
-                    We will review this document before activating your teacher
-                    dashboard.
+                </div>
+
+                {/* Total Students Card */}
+                <div className="bg-orange-50 rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 animate-[fadeInUp_0.6s_ease-out_0.2s_both]">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="w-12 h-12 bg-orange-400 rounded-lg flex items-center justify-center mb-4">
+                        <i className="bi bi-people text-white text-2xl"></i>
+                      </div>
+                      <h3 className="text-3xl font-bold text-[#203875] mb-1">
+                        {dashboardData.stats?.totalStudents || 0}
+                      </h3>
+                      <p className="text-sm font-semibold text-[#203875]">
+                        Total students
+                      </p>
+                      <p className="text-xs text-gray-500 mt-1">
+                        {dashboardData.stats?.totalClasses || 0} Classes
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress Rate Card */}
+                <div className="bg-green-50 rounded-lg p-6 hover:shadow-lg transition-all duration-300 hover:scale-105 animate-[fadeInUp_0.6s_ease-out_0.3s_both]">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="w-12 h-12 bg-green-400 rounded-lg flex items-center justify-center mb-4">
+                        <i className="bi bi-graph-up text-white text-2xl"></i>
+                      </div>
+                      <h3 className="text-3xl font-bold text-[#203875] mb-1">
+                        {dashboardData.stats?.progressRate || 0}
+                      </h3>
+                      <p className="text-sm font-medium text-[#203875]">
+                    Progress Rate
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Average Class Performance
                   </p>
                 </div>
               </div>
-            )}
+            </div>
+          </div>
 
-            {/* Terms and Privacy Checkbox */}
-            <div className="flex items-start gap-3 animate-[fadeInUp_0.5s_ease-out_0.7s_both]">
-              <input
-                type="checkbox"
-                id="agreeToTerms"
-                name="agreeToTerms"
-                checked={formData.agreeToTerms}
-                onChange={handleChange}
-                className="mt-0.5 w-4 h-4 text-[#00B4D8] bg-gray-100 border-gray-300 rounded focus:ring-[#00B4D8] focus:ring-2 cursor-pointer transition-all duration-200 hover:scale-110"
-                required
-              />
-              <label
-                htmlFor="agreeToTerms"
-                className="text-sm text-gray-700 cursor-pointer leading-relaxed"
-              >
-                I agree to the{" "}
-                <a
-                  href="#"
-                  className="text-blue-700 hover:underline transition-all duration-200 hover:scale-105 inline-block"
-                >
-                  Terms Of Service
-                </a>{" "}
-                and{" "}
-                <a
-                  href="#"
-                  className="text-blue-700 hover:underline transition-all duration-200 hover:scale-105 inline-block"
-                >
-                  Privacy Policy
-                </a>
-              </label>
+          {/* Overall Class Performance */}
+          <div className="bg-[#0857bf] rounded-lg p-6 animate-[fadeInUp_0.6s_ease-out_0.4s_both] hover:shadow-xl transition-shadow duration-300">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Overall Class Performance
+                </h2>
+                <p className="text-white/80 text-sm mt-1">
+                  Overall Completion Status
+                </p>
+              </div>
+              <div className="w-10 h-10 bg-[#00B4D8] rounded flex items-center justify-center">
+                <i className="bi bi-graph-up text-white text-lg"></i>
+              </div>
             </div>
 
-            {formData.role === "teacher" && (
-              <div className="text-sm text-blue-700 bg-blue-50 border border-blue-100 rounded-lg p-3 animate-[fadeInUp_0.5s_ease-out_0.75s_both]">
-                Teacher accounts are activated after credential review. Ensure
-                the information above is accurate so we can verify you quickly.
+            {/* Progress Section */}
+            <div className="mb-6">
+              <div className="flex items-center gap-3 mb-2">
+                <span className="text-white text-sm font-medium">
+                  Completed
+                </span>
+                <div className="flex-1 relative">
+                  <div className="w-full bg-blue-400 rounded-full h-3">
+                    <div
+                      className="bg-white rounded-full h-3 transition-all duration-500"
+                      style={{ 
+                        width: `${dashboardData.classPerformance?.completionPercentage || 0}%` 
+                      }}
+                    ></div>
+                  </div>
+                </div>
+                <span className="text-white text-sm font-medium">
+                  {dashboardData.classPerformance?.completionPercentage || 0}%
+                </span>
               </div>
-            )}
+            </div>
 
-            {formError && (
-              <div className="text-sm text-red-600 font-semibold animate-[fadeIn_0.4s_ease-out_0.8s_both]">
-                {formError}
+            {/* Breakdown */}
+            <div className="grid grid-cols-3 gap-4">
+              <div>
+                <p className="text-white text-2xl font-bold">
+                  {dashboardData.classPerformance?.completed || 0}
+                </p>
+                <p className="text-gray-400 text-sm">Completed</p>
               </div>
-            )}
+              <div>
+                <p className="text-white text-2xl font-bold">
+                  {dashboardData.classPerformance?.inProgress || 0}
+                </p>
+                <p className="text-gray-400 text-sm">In Progress</p>
+              </div>
+              <div>
+                <p className="text-white text-2xl font-bold">
+                  {dashboardData.classPerformance?.total || 0}
+                </p>
+                <p className="text-gray-400 text-sm">Total</p>
+              </div>
+            </div>
+          </div>
 
-            {/* Sign Up Button */}
-            <button
-              type="submit"
-              className="w-full bg-blue-700 text-white font-bold py-3 px-4 rounded-lg hover:bg-[#0096B3] transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-[#00B4D8] focus:ring-offset-2 animate-[fadeInUp_0.5s_ease-out_0.8s_both] hover:scale-[1.02] hover:shadow-lg active:scale-[0.98]"
-            >
-              Sign Up
-            </button>
-
-            {/* Login Link */}
-            <div className="text-center text-sm text-gray-700 animate-[fadeInUp_0.5s_ease-out_0.9s_both]">
-              already have an account?{" "}
+          {/* Recent Submissions */}
+          <div className="animate-[fadeInUp_0.6s_ease-out_0.5s_both]">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-bold text-gray-900">
+                Recent Submissions
+              </h2>
               <a
-                href="/login"
-                className="text-blue-700 hover:underline font-medium transition-all duration-200 hover:scale-105 inline-block"
+                href="#"
+                className="text-[#00B4D8] text-sm font-medium hover:underline transition-all duration-200"
               >
-                Log in
+                View All →
               </a>
             </div>
 
-            {/* Temporary: Skip to Dashboard for Testing */}
-            <div className="text-center pt-4 border-t border-gray-200">
-              <button
-                type="button"
-                onClick={() => navigate("/teacher/dashboard")}
-                className="text-sm text-gray-500 hover:text-[#00B4D8] transition-colors duration-200 underline"
-              >
-                Skip to Dashboard (Testing)
-              </button>
+            <div className="space-y-3">
+              {dashboardData.recentSubmissions.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">
+                  <p>No recent submissions</p>
+                </div>
+              ) : (
+                dashboardData.recentSubmissions.map((submission, index) => {
+                  const initials = submission.studentName
+                    ?.split(" ")
+                    .map((n) => n[0])
+                    .join("")
+                    .toUpperCase()
+                    .substring(0, 2) || "ST";
+                  const statusColors = {
+                    pending: "bg-[#FF8A56]",
+                    submitted: "bg-[#283447]",
+                    reviewed: "bg-green-500",
+                  };
+                  return (
+                    <div
+                      key={submission.id || index}
+                      className="bg-gray-50 border-l-4 border-l-[#0857bf] rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 hover:translate-x-1"
+                    >
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-[#FF8A56] rounded-full flex items-center justify-center shrink-0">
+                          <span className="text-white font-bold text-sm">
+                            {initials}
+                          </span>
+                        </div>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">
+                            {submission.studentName || "Student"}
+                          </h3>
+                          <p className="text-sm text-gray-500">
+                            {submission.subject || submission.assignmentName}
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            {submission.dueDate || submission.submittedAt}
+                          </p>
+                        </div>
+                      </div>
+                      <span
+                        className={`px-3 py-1.5 ${
+                          statusColors[submission.status?.toLowerCase()] ||
+                          statusColors.pending
+                        } text-white text-xs font-medium rounded`}
+                      >
+                        {submission.status || "Pending"}
+                      </span>
+                    </div>
+                  );
+                })
+              )}
             </div>
-          </form>
-        </div>
+          </div>
+            </>
+          )}
+        </main>
       </div>
     </div>
   );
 }
 
-export default Signup;
+export default TeacherDashboard;
