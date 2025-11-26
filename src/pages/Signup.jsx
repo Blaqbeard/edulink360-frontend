@@ -79,26 +79,29 @@ function Signup() {
     }
 
     try {
-      // 2️⃣ Create FormData for API call
+      // 2️⃣ Create FormData for API call (match backend spec)
       const submitData = new FormData();
-      submitData.append("name", formData.name);
-      submitData.append("email", formData.email);
-      submitData.append("password", formData.password);
-      submitData.append("role", formData.role);
+      const normalizedRole =
+        formData.role?.toUpperCase() === "TEACHER" ? "TEACHER" : "STUDENT";
+      const isTeacherSignup = normalizedRole === "TEACHER";
 
-      // Only add teacher-specific fields if role is "teacher"
-      // Students should NOT have these fields in FormData
-      if (formData.role === "teacher") {
-        submitData.append("teacherId", formData.teacherId);
-        submitData.append("schoolName", formData.schoolName);
-        
-        // Add certificate file if exists
+      submitData.append("name", formData.name.trim());
+      submitData.append("email", formData.email.trim());
+      submitData.append("password", formData.password);
+      submitData.append("role", normalizedRole);
+
+      // Only add teacher-specific fields if role is "TEACHER"
+      if (isTeacherSignup) {
+        submitData.append("teacherId", formData.teacherId.trim());
+        submitData.append("schoolName", formData.schoolName.trim());
+
+        // Add credential file if provided (backend expects `file`)
         const certificateFile = certificateFileRef.current?.files?.[0];
         if (certificateFile) {
-          submitData.append("certificate", certificateFile);
+          submitData.append("file", certificateFile);
         }
       }
-      // Explicitly: For students, teacherId, schoolName, and certificate are NOT appended
+      // For students, teacherId/schoolName/file are intentionally not appended
 
       // 3️⃣ Call signup API
       const response = await authService.signup(submitData);
@@ -106,7 +109,7 @@ function Signup() {
       // 4️⃣ Show success notification
       alert(
         `Account created successfully! ${
-          formData.role === "teacher"
+          isTeacherSignup
             ? "Your account will be activated after credential review."
             : "You can now log in."
         }`
@@ -115,8 +118,7 @@ function Signup() {
       // 5️⃣ Redirect based on role
       if (response.token) {
         // Auto-login if token is returned
-        const redirectPath =
-          formData.role === "teacher" ? "/teacher/dashboard" : "/";
+        const redirectPath = isTeacherSignup ? "/teacher/dashboard" : "/";
         navigate(redirectPath);
       } else {
         // Redirect to login if no auto-login
