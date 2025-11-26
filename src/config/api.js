@@ -14,10 +14,12 @@ const api = axios.create({
 
 api.interceptors.request.use(
   (config) => {
+    // Handle FormData - let Axios set Content-Type with boundary
     if (config.data instanceof FormData) {
       delete config.headers['Content-Type'];
     }
     
+    // Define public endpoints that should NEVER receive Authorization header
     const publicEndpoints = [
       '/auth/register',
       '/auth/signup',
@@ -32,9 +34,16 @@ api.interceptors.request.use(
       requestUrl.includes(endpoint)
     );
     
+    // For public endpoints, explicitly remove Authorization header
     if (isPublicEndpoint) {
+      // Explicitly delete to ensure no token is sent
       delete config.headers.Authorization;
+      // Also ensure it's not set elsewhere
+      if (config.headers && config.headers.Authorization) {
+        delete config.headers.Authorization;
+      }
     } else {
+      // For protected endpoints, add token if available
       // Support both token names for compatibility
       const token = localStorage.getItem('authToken') || localStorage.getItem('token');
       if (token) {
