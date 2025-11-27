@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Search, Star, MessageSquareText } from "lucide-react";
 
-// No changes needed for this sub-component. It's perfect.
 const FilterTabs = () => {
   const [activeTab, setActiveTab] = useState("Groups");
   const tabs = ["Groups", "Students", "Favorites", "Unread"];
@@ -25,7 +24,6 @@ const FilterTabs = () => {
   );
 };
 
-// No changes needed for this sub-component. It's perfect.
 const ConversationItem = ({ convo, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -93,7 +91,7 @@ export default function ConversationsList({
         activeConversationId ? "hidden md:flex" : "flex"
       }`}
     >
-      {/* Header Area (No changes needed here) */}
+      {/* Header Area */}
       <div className="p-4 space-y-4 border-b">
         <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
         <FilterTabs />

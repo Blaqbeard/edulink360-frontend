@@ -3,9 +3,7 @@ import ConversationsList from "../components/messages/ConversationsList";
 import ChatWindow from "../components/messages/ChatWindow";
 import GroupInfoPanel from "../components/messages/GroupInfoPanel";
 
-// The mockConversations data is correct and does not need changes.
 const mockConversations = [
-  // ... your existing mock data ...
   {
     id: 1,
     name: "Web Development",
@@ -140,7 +138,6 @@ const mockConversations = [
 ];
 
 export default function Messages() {
-  // 1. Start with no conversation selected to show the list first on mobile.
   const [activeConversationId, setActiveConversationId] = useState(null);
   const [isInfoPanelOpen, setIsInfoPanelOpen] = useState(false);
 
@@ -148,10 +145,10 @@ export default function Messages() {
     (c) => c.id === activeConversationId
   );
 
-  // 2. Create a handler function to manage conversation selection.
+  // handler function to manage conversation selection.
   const handleConversationSelect = (id) => {
     setActiveConversationId(id);
-    setIsInfoPanelOpen(false); // Also close the info panel when switching chats.
+    setIsInfoPanelOpen(false);
   };
 
   return (
@@ -159,14 +156,13 @@ export default function Messages() {
       <ConversationsList
         conversations={mockConversations}
         activeConversationId={activeConversationId}
-        // Pass the new handler instead of the raw state setter.
         onConversationSelect={handleConversationSelect}
       />
       <ChatWindow
         conversation={activeConversation}
         onHeaderClick={() => setIsInfoPanelOpen(true)}
         isPanelOpen={isInfoPanelOpen}
-        // 3. Add the 'onBack' prop to allow navigation back to the list.
+        // the 'onBack' prop to allow navigation back to the list.
         onBack={() => setActiveConversationId(null)}
       />
       <GroupInfoPanel

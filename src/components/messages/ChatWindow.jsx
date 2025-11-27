@@ -10,11 +10,9 @@ import {
   Play,
   Lightbulb,
   ArrowRight,
-  Check, // <--- 1. ADD 'Check' TO THIS LIST
+  Check,
 } from "lucide-react";
 
-// --- All your message sub-components (TextMessage, FeedbackMessage, etc.) go here ---
-// --- They do not need any changes. I'm omitting them for brevity. ---
 const TextMessage = ({ msg, conversation }) => (
   <div
     className={`flex items-end gap-2 ${
@@ -156,7 +154,6 @@ export default function ChatWindow({
   }
 
   const renderMessage = (msg) => {
-    // ... (renderMessage function is unchanged)
     switch (msg.type) {
       case "feedback":
         return <FeedbackMessage key={msg.id} msg={msg} />;
@@ -174,8 +171,6 @@ export default function ChatWindow({
   };
 
   return (
-    // 3. Update visibility logic. This component is hidden if the info panel is open,
-    // but it should always be a flex container.
     <div
       className={`flex-1 flex-col h-full bg-white ${
         isPanelOpen ? "hidden lg:flex" : "flex"

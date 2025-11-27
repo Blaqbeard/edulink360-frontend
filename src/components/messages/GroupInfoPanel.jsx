@@ -10,7 +10,6 @@ import {
   Cog,
 } from "lucide-react";
 
-// No changes needed for this sub-component. It's perfect.
 const InfoTabs = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const tabs = [
@@ -42,7 +41,6 @@ const InfoTabs = () => {
   );
 };
 
-// No changes needed for this sub-component. It's perfect.
 const MemberItem = ({ member }) => {
   const statusColors = {
     online: "bg-green-500",
@@ -72,7 +70,6 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
     return null;
   }
 
-  // Fallback for the unlikely case where the panel is open but there's no conversation.
   if (!conversation) {
     return (
       <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l p-6">
@@ -85,10 +82,9 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
-    // On small screens, this panel is an absolute overlay. On large screens, it's part of the static layout.
     <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
-      {/* 1. UNIVERSAL HEADER WITH BACK ARROW */}
-      {/* This header is now always visible when the panel is open, on all screen sizes. */}
+      {/* UNIVERSAL HEADER WITH BACK ARROW */}
+
       <div className="p-4 border-b flex items-center space-x-4 flex-shrink-0">
         <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
           <ArrowLeft size={24} />

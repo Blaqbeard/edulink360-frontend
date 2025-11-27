@@ -1,4 +1,4 @@
-// src/pages/Dashboard.jsx
+
 import React from "react";
 import StatCard from "../components/common/StatCard";
 import CourseProgress from "../components/dashboard/CourseProgress";

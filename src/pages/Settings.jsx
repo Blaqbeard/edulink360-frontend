@@ -3,7 +3,6 @@ import { ArrowLeft } from "lucide-react";
 import Input from "../components/common/Input";
 import ToggleSwitch from "../components/common/ToggleSwitch";
 
-// 1. A new, correctly styled sub-component for each row in the settings cards.
 const SettingItem = ({ title, description, control }) => (
   <div className="flex items-center justify-between py-4">
     <div className="pr-4">
@@ -30,7 +29,7 @@ export default function Settings() {
   };
 
   return (
-    // 2. Main container with a light gray background
+    // Main container with a light gray background
     <div className="bg-gray-50 min-h-full p-4 sm:p-6 lg:p-8">
       <div className="max-w-3xl mx-auto">
         {/* Page Header */}
@@ -122,7 +121,6 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* 3. Added the missing cards */}
         {/* Privacy and Accessibility Card */}
         <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
           <h2 className="text-lg font-bold">Privacy and Accessibility</h2>
