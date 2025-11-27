@@ -16,7 +16,7 @@ import smallLogo from "../../assets/images/logo.jpg"; // A smaller version of th
 const studentNavLinks = [
   { to: "/", text: "Dashboard", icon: <LuLayoutDashboard /> },
   { to: "/messages", text: "Messages", icon: <LuMessageSquare /> },
-  { to: "/feedbacks", text: "Feedbacks", icon: <LuFileText /> },
+  { to: "/assignments", text: "Assignments", icon: <LuFileText /> },
   { to: "/notifications", text: "Notifications", icon: <LuBell /> },
 ];
 

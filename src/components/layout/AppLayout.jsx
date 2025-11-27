@@ -42,6 +42,10 @@ const getPageTitle = (pathname, user) => {
         return `Welcome back, ${name} 👋`;
       case "/messages":
         return "Messages";
+      case "/assignments":
+        return "Assignments";
+      case "/notifications":
+        return "Notifications";
       case "/profile":
         return "Profile";
       case "/settings":

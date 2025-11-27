@@ -59,18 +59,20 @@ function TeacherNotifications() {
   const fetchNotifications = async () => {
     try {
       setLoading(true);
-      const response = await notificationService.getNotifications();
-      const formattedNotifications =
-        response.data?.map((notif) => ({
-          id: notif.id,
-          type: notif.type,
-          title: notif.title,
-          message: notif.message,
-          time: formatTime(notif.createdAt),
-          unread: !notif.read,
-          icon: getNotificationIcon(notif.type),
-          color: getNotificationColor(notif.type),
-        })) || [];
+      const notificationList = await notificationService.getNotifications({
+        page: 1,
+        limit: 50,
+      });
+      const formattedNotifications = notificationList.map((notif) => ({
+        id: notif.id,
+        type: notif.type,
+        title: notif.title,
+        message: notif.message,
+        time: formatTime(notif.createdAt),
+        unread: !notif.read,
+        icon: getNotificationIcon(notif.type),
+        color: getNotificationColor(notif.type),
+      }));
       setNotifications(formattedNotifications);
       setUnreadCount(formattedNotifications.filter((n) => n.unread).length);
     } catch (error) {

@@ -12,6 +12,8 @@ import Dashboard from "../pages/Dashboard";
 import Messages from "../pages/Messages";
 import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
+import Assignments from "../pages/Assignments";
+import Notifications from "../pages/Notifications";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 
@@ -45,6 +47,8 @@ export default function AppRoutes() {
         <Route index element={<Dashboard />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+        <Route path="assignments" element={<Assignments />} />
+        <Route path="notifications" element={<Notifications />} />
       </Route>
 
       {/* Student Messages use a custom layout */}
