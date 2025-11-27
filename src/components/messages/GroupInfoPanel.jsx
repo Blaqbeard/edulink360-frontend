@@ -82,10 +82,10 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
+    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l border-gray-200 lg:flex-shrink-0 flex flex-col">
       {/* UNIVERSAL HEADER WITH BACK ARROW */}
 
-      <div className="p-4 border-b flex items-center space-x-4 flex-shrink-0">
+      <div className="p-4 border-b border-gray-200 flex items-center space-x-4 flex-shrink-0">
         <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
           <ArrowLeft size={24} />
         </button>

@@ -27,14 +27,14 @@ const FilterTabs = () => {
 const ConversationItem = ({ convo, isActive, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full text-left p-4 flex space-x-4 items-start border-b transition-colors hover:bg-gray-50 ${
-      isActive ? "bg-blue-50" : ""
+    className={`w-full text-left p-4 flex space-x-4 items-start border-b border-gray-200 transition-colors hover:bg-gray-50 ${
+      isActive ? "bg-blue-40" : ""
     }`}
   >
     {/* Blue indicator for active chat */}
     <div
       className={`w-1 rounded-full h-12 ${
-        isActive ? "bg-blue-600" : "bg-transparent"
+        isActive ? "bg-blue-400" : "bg-transparent"
       }`}
     ></div>
 
@@ -87,12 +87,12 @@ export default function ConversationsList({
   return (
     // 1. Add conditional classes to hide this component on mobile when a chat is active.
     <div
-      className={`w-full md:w-[360px] h-full border-r bg-white flex-col flex-shrink-0 ${
+      className={`w-full md:w-[360px] h-full border-r border-gray-200 bg-white flex-col flex-shrink-0 ${
         activeConversationId ? "hidden md:flex" : "flex"
       }`}
     >
       {/* Header Area */}
-      <div className="p-4 space-y-4 border-b">
+      <div className="p-4 space-y-4 border-b border-gray-200">
         <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
         <FilterTabs />
         <div className="relative">
