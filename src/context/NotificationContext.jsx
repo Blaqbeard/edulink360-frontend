@@ -25,7 +25,8 @@ export const NotificationProvider = ({ children }) => {
 
     try {
       setIsLoading(true);
-      const data = await notificationService.getUnreadCount();
+      const user = authService.getCurrentUser();
+      const data = await notificationService.getUnreadCount(user?.role);
       setUnreadCount(data.count || 0);
     } catch (error) {
       // Silently fail if not authenticated or other errors

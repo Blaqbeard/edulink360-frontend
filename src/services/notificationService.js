@@ -7,12 +7,20 @@ const normalizeList = (payload) => {
   return [];
 };
 
+const getRole = (role) => (role || "").toUpperCase();
+
+const getTeacherPath = (suffix = "") =>
+  `/api/teacher/notifications${suffix}`;
+
 export const notificationService = {
-  /**
-   * GET /notifications
-   */
-  getNotifications: async ({ page = 1, limit = 20 } = {}) => {
+  getNotifications: async ({ page = 1, limit = 20, role } = {}) => {
     try {
+      if (getRole(role) === "TEACHER") {
+        const { data } = await api.get(
+          `${getTeacherPath(`?page=${page}&limit=${limit}`)}`
+        );
+        return normalizeList(data);
+      }
       const { data } = await api.get("/notifications", {
         params: { page, limit },
       });
@@ -22,11 +30,14 @@ export const notificationService = {
     }
   },
 
-  /**
-   * PATCH /notifications/mark-read/{id}
-   */
-  markAsRead: async (notificationId) => {
+  markAsRead: async (notificationId, role) => {
     try {
+      if (getRole(role) === "TEACHER") {
+        const { data } = await api.put(
+          getTeacherPath(`/${notificationId}/read`)
+        );
+        return data;
+      }
       const { data } = await api.patch(
         `/notifications/mark-read/${notificationId}`
       );
@@ -36,11 +47,12 @@ export const notificationService = {
     }
   },
 
-  /**
-   * PATCH /notifications/mark-read/all
-   */
-  markAllAsRead: async () => {
+  markAllAsRead: async (role) => {
     try {
+      if (getRole(role) === "TEACHER") {
+        const { data } = await api.put(getTeacherPath("/read-all"));
+        return data;
+      }
       const { data } = await api.patch("/notifications/mark-read/all");
       return data;
     } catch (error) {
@@ -48,11 +60,12 @@ export const notificationService = {
     }
   },
 
-  /**
-   * GET /notifications/unread-count
-   */
-  getUnreadCount: async () => {
+  getUnreadCount: async (role) => {
     try {
+      if (getRole(role) === "TEACHER") {
+        const { data } = await api.get(getTeacherPath("/unread-count"));
+        return data;
+      }
       const { data } = await api.get("/notifications/unread-count");
       return data;
     } catch (error) {

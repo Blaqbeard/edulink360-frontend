@@ -31,6 +31,7 @@ export default function Notifications() {
   const [filter, setFilter] = useState("all");
   const [statusMessage, setStatusMessage] = useState(null);
   const { refreshCount } = useNotifications();
+  const role = "student";
 
   useEffect(() => {
     fetchNotifications();
@@ -48,6 +49,7 @@ export default function Notifications() {
       const list = await notificationService.getNotifications({
         page: 1,
         limit: 50,
+        role,
       });
       setNotifications(list);
       refreshCount?.();
@@ -64,7 +66,7 @@ export default function Notifications() {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationService.markAsRead(notificationId);
+      await notificationService.markAsRead(notificationId, role);
       setNotifications((prev) =>
         prev.map((notif) =>
           notif.id === notificationId ? { ...notif, read: true } : notif
@@ -80,7 +82,7 @@ export default function Notifications() {
 
   const handleMarkAll = async () => {
     try {
-      await notificationService.markAllAsRead();
+      await notificationService.markAllAsRead(role);
       setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
       setStatusMessage("All notifications marked as read.");
     } catch (err) {
@@ -125,6 +127,12 @@ export default function Notifications() {
             className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
           >
             Mark all as read
+          </button>
+          <button
+            onClick={fetchNotifications}
+            className="px-4 py-2 border border-blue-600 text-blue-600 text-sm rounded-lg hover:bg-blue-50 transition-colors"
+          >
+            Refresh
           </button>
         </div>
       </div>

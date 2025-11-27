@@ -13,6 +13,18 @@ const clampPercent = (value) => {
   return Math.min(100, Math.max(0, value));
 };
 
+const formatTimestamp = (value) => {
+  if (!value) return "Just now";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return value;
+  return date.toLocaleString([], {
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+};
+
 function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -623,6 +635,86 @@ function TeacherDashboard() {
                         </p>
                       </div>
                     ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Recent Submissions */}
+              <div className="bg-white rounded-lg p-6 shadow-sm animate-[fadeInUp_0.6s_ease-out_0.46s_both]">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Recent Submissions
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Latest student activity across your classes
+                    </p>
+                  </div>
+                  <button
+                    onClick={fetchDashboardData}
+                    className="px-4 py-2 bg-white border border-gray-200 rounded-lg text-sm font-semibold text-gray-700 hover:bg-gray-50"
+                  >
+                    Refresh
+                  </button>
+                </div>
+                {dashboardData.recentSubmissions?.length ? (
+                  <div className="space-y-3">
+                    {dashboardData.recentSubmissions
+                      .slice(0, 6)
+                      .map((submission, index) => {
+                        const status =
+                          submission.status ||
+                          submission.reviewStatus ||
+                          submission.grade
+                            ? "GRADED"
+                            : "SUBMITTED";
+                        return (
+                          <div
+                            key={submission.id || index}
+                            className="flex items-center justify-between border border-gray-100 rounded-xl px-4 py-3"
+                          >
+                            <div className="flex items-center gap-4">
+                              <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 font-semibold flex items-center justify-center">
+                                {(submission.studentName ||
+                                  submission.student ||
+                                  "ST")
+                                  .split(" ")
+                                  .map((n) => n[0])
+                                  .join("")
+                                  .toUpperCase()
+                                  .substring(0, 2)}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-gray-900">
+                                  {submission.studentName ||
+                                    submission.student ||
+                                    "Student"}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {submission.assignmentTitle ||
+                                    submission.assignment ||
+                                    "Assignment"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-xs text-gray-400">
+                                {formatTimestamp(
+                                  submission.submittedAt ||
+                                    submission.createdAt
+                                )}
+                              </p>
+                              <p className="text-sm font-semibold text-gray-700">
+                                {status}
+                              </p>
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                ) : (
+                  <div className="py-8 text-center text-gray-500 border border-dashed border-gray-200 rounded-xl">
+                    No submissions yet.
                   </div>
                 )}
               </div>

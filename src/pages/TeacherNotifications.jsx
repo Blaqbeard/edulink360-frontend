@@ -11,6 +11,7 @@ function TeacherNotifications() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
+  const role = "teacher";
 
   const isActive = (path) => location.pathname === path;
 
@@ -54,21 +55,13 @@ function TeacherNotifications() {
     return colors[type] || "bg-gray-100 text-gray-600";
   };
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  useEffect(() => {
-    const interval = setInterval(fetchNotifications, 20000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const fetchNotifications = async () => {
+  const fetchNotifications = useCallback(async () => {
     try {
       setLoading(true);
       const notificationList = await notificationService.getNotifications({
         page: 1,
         limit: 50,
+        role,
       });
       const formattedNotifications = notificationList.map((notif) => ({
         id: notif.id,
@@ -88,15 +81,25 @@ function TeacherNotifications() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [refreshCount, role]);
+
+  useEffect(() => {
+    fetchNotifications();
+  }, [fetchNotifications]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
+  }, [fetchNotifications]);
 
   const handleMarkAllAsRead = async () => {
     try {
-      await notificationService.markAllAsRead();
+      await notificationService.markAllAsRead(role);
       setNotifications((prev) =>
         prev.map((notif) => ({ ...notif, unread: false }))
       );
       setUnreadCount(0);
+      refreshCount?.();
     } catch (error) {
       console.error("Error marking all as read:", error);
     }
@@ -104,101 +107,18 @@ function TeacherNotifications() {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationService.markAsRead(notificationId);
+      await notificationService.markAsRead(notificationId, role);
       setNotifications((prev) =>
         prev.map((notif) =>
           notif.id === notificationId ? { ...notif, unread: false } : notif
         )
       );
       setUnreadCount((prev) => Math.max(0, prev - 1));
+      refreshCount?.();
     } catch (error) {
       console.error("Error marking as read:", error);
     }
   };
-
-  const sampleNotifications = [
-    {
-      id: 1,
-      type: "submission",
-      title: "New Assignment Submission",
-      message: "Ada Okafor submitted 'Web Development Project'",
-      time: "5 minutes ago",
-      unread: true,
-      icon: "bi-file-earmark-check",
-      color: "bg-blue-100 text-blue-600",
-    },
-    {
-      id: 2,
-      type: "message",
-      title: "New Message",
-      message: "Mike Chen sent a message in Web Development group",
-      time: "15 minutes ago",
-      unread: true,
-      icon: "bi-chat-dots",
-      color: "bg-green-100 text-green-600",
-    },
-    {
-      id: 3,
-      type: "feedback",
-      title: "Feedback Request",
-      message: "Emily Davis requested feedback on 'Lab Report Assessment'",
-      time: "1 hour ago",
-      unread: true,
-      icon: "bi-chat-square-text",
-      color: "bg-orange-100 text-orange-600",
-    },
-    {
-      id: 4,
-      type: "deadline",
-      title: "Deadline Reminder",
-      message:
-        "Assignment deadline approaching: 'Essay Writing' due in 2 hours",
-      time: "2 hours ago",
-      unread: false,
-      icon: "bi-clock",
-      color: "bg-yellow-100 text-yellow-600",
-    },
-    {
-      id: 5,
-      type: "grade",
-      title: "Grade Posted",
-      message: "Grades for 'Quiz Performance' have been posted",
-      time: "3 hours ago",
-      unread: false,
-      icon: "bi-check-circle",
-      color: "bg-purple-100 text-purple-600",
-    },
-    {
-      id: 6,
-      type: "announcement",
-      title: "Class Announcement",
-      message: "New announcement posted in Web Development group",
-      time: "5 hours ago",
-      unread: false,
-      icon: "bi-megaphone",
-      color: "bg-indigo-100 text-indigo-600",
-    },
-    {
-      id: 7,
-      type: "submission",
-      title: "New Assignment Submission",
-      message: "James Wilson submitted 'Data Structure Assignment'",
-      time: "Yesterday",
-      unread: false,
-      icon: "bi-file-earmark-check",
-      color: "bg-blue-100 text-blue-600",
-    },
-    {
-      id: 8,
-      type: "message",
-      title: "New Message",
-      message: "Sarah Johnson sent a message in Introduction to Design group",
-      time: "Yesterday",
-      unread: false,
-      icon: "bi-chat-dots",
-      color: "bg-green-100 text-green-600",
-    },
-  ];
 
   return (
     <div className="min-h-screen flex bg-gray-50">

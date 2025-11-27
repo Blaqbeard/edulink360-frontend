@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { studentService } from "../services/studentService";
 import { useNotifications } from "../context/NotificationContext";
 
@@ -15,32 +15,6 @@ const formatDate = (value) => {
   });
 };
 
-const getStatusBadge = (assignment) => {
-  const statusCandidates = [
-    assignment?.submissionStatus,
-    assignment?.status,
-    assignment?.submission?.status,
-    assignment?.submission?.grade ? "GRADED" : null,
-    assignment?.submitted ? "SUBMITTED" : null,
-    assignment?.hasSubmitted ? "SUBMITTED" : null,
-  ].filter(Boolean);
-
-  if (statusCandidates.length > 0) {
-    return statusCandidates[0].toUpperCase();
-  }
-
-  if (assignment?.submission || assignment?.submissionId) {
-    return "SUBMITTED";
-  }
-
-  const dueDate = assignment?.dueDate;
-  if (dueDate && new Date(dueDate) < new Date()) {
-    return "OVERDUE";
-  }
-
-  return "PENDING";
-};
-
 export default function Assignments() {
   const [assignments, setAssignments] = useState([]);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState(null);
@@ -51,6 +25,7 @@ export default function Assignments() {
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null);
+  const [locallySubmittedIds, setLocallySubmittedIds] = useState([]);
   const { refreshCount } = useNotifications();
 
   useEffect(() => {
@@ -105,6 +80,11 @@ export default function Assignments() {
       await studentService.submitAssignment(selectedAssignment.id, selectedFile);
       setSelectedFile(null);
       refreshCount?.();
+      setLocallySubmittedIds((prev) =>
+        prev.includes(selectedAssignment.id)
+          ? prev
+          : [...prev, selectedAssignment.id]
+      );
       setAssignments((prev) =>
         prev.map((assignment) =>
           assignment.id === selectedAssignment.id
@@ -139,7 +119,9 @@ export default function Assignments() {
     try {
       setFeedbackLoading(true);
       setFeedback(null);
-      const data = await studentService.getAssignmentFeedback(selectedAssignment.id);
+      const data = await studentService.getAssignmentFeedback(
+        selectedAssignment.id
+      );
       setFeedback(data?.feedback || data);
     } catch (err) {
       setStatusMessage(
@@ -152,6 +134,39 @@ export default function Assignments() {
       setFeedbackLoading(false);
     }
   };
+
+  const getStatusBadge = useCallback(
+    (assignment) => {
+      if (!assignment) return "PENDING";
+      if (locallySubmittedIds.includes(assignment.id)) return "SUBMITTED";
+
+      const statusCandidates = [
+        assignment?.submissionStatus,
+        assignment?.status,
+        assignment?.submission?.status,
+        assignment?.submission?.grade ? "GRADED" : null,
+        assignment?.submitted ? "SUBMITTED" : null,
+        assignment?.hasSubmitted ? "SUBMITTED" : null,
+        assignment?.isSubmitted ? "SUBMITTED" : null,
+      ].filter(Boolean);
+
+      if (statusCandidates.length > 0) {
+        return statusCandidates[0].toUpperCase();
+      }
+
+      if (assignment?.submission || assignment?.submissionId) {
+        return "SUBMITTED";
+      }
+
+      const dueDate = assignment?.dueDate;
+      if (dueDate && new Date(dueDate) < new Date()) {
+        return "OVERDUE";
+      }
+
+      return "PENDING";
+    },
+    [locallySubmittedIds]
+  );
 
   return (
     <div className="w-full max-w-6xl p-6 space-y-6">
