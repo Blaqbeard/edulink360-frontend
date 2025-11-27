@@ -5,6 +5,14 @@ import { dashboardService } from "../services/dashboardService";
 import { teacherService } from "../services/teacherService";
 import { authService } from "../services/authService";
 
+const toNumberOrNull = (value) =>
+  typeof value === "number" && !Number.isNaN(value) ? value : null;
+
+const clampPercent = (value) => {
+  if (typeof value !== "number" || Number.isNaN(value)) return null;
+  return Math.min(100, Math.max(0, value));
+};
+
 function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -28,6 +36,11 @@ function TeacherDashboard() {
   const user = authService.getCurrentUser();
 
   const isActive = (path) => location.pathname === path;
+  const performanceMetrics = dashboardData.classPerformance;
+  const completionPercentValue =
+    typeof performanceMetrics?.completionPercentage === "number"
+      ? Math.round(performanceMetrics.completionPercentage)
+      : null;
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -58,15 +71,37 @@ function TeacherDashboard() {
           totalClasses,
         };
 
-        const classPerformance = {
-          completionPercentage:
-            dashboardSummary?.completionPercentage ??
-            dashboardSummary?.progressRate ??
-            0,
-          completed: dashboardSummary?.completedClasses ?? 0,
-          inProgress: dashboardSummary?.inProgressClasses ?? 0,
-          total: totalClasses,
-        };
+        const completedClasses = toNumberOrNull(
+          dashboardSummary?.completedClasses
+        );
+        const inProgressClasses = toNumberOrNull(
+          dashboardSummary?.inProgressClasses
+        );
+        const completionFromApi = toNumberOrNull(
+          dashboardSummary?.completionPercentage ??
+            dashboardSummary?.progressRate
+        );
+        const derivedCompletion =
+          completionFromApi ??
+          (completedClasses !== null && totalClasses > 0
+            ? (completedClasses / totalClasses) * 100
+            : null);
+        const completionPercentage = clampPercent(derivedCompletion);
+
+        const hasPerformanceData =
+          completionPercentage !== null ||
+          completedClasses !== null ||
+          inProgressClasses !== null ||
+          totalClasses > 0;
+
+        const classPerformance = hasPerformanceData
+          ? {
+              completionPercentage,
+              completed: completedClasses,
+              inProgress: inProgressClasses,
+              total: totalClasses || null,
+            }
+          : null;
 
         setDashboardData({
           stats,
@@ -475,54 +510,60 @@ function TeacherDashboard() {
                   </div>
                 </div>
 
-                {/* Progress Section */}
-                <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <span className="text-white text-sm font-medium">
-                      Completed
-                    </span>
-                    <div className="flex-1 relative">
-                      <div className="w-full bg-blue-400 rounded-full h-3">
-                        <div
-                          className="bg-white rounded-full h-3 transition-all duration-500"
-                          style={{
-                            width: `${
-                              dashboardData.classPerformance
-                                ?.completionPercentage || 0
-                            }%`,
-                          }}
-                        ></div>
+                {performanceMetrics ? (
+                  <>
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <span className="text-white text-sm font-medium">
+                          Completed
+                        </span>
+                        <div className="flex-1 relative">
+                          <div className="w-full bg-blue-400 rounded-full h-3">
+                            <div
+                              className="bg-white rounded-full h-3 transition-all duration-500"
+                              style={{
+                                width: `${
+                                  completionPercentValue ?? 0
+                                }%`,
+                              }}
+                            ></div>
+                          </div>
+                        </div>
+                        <span className="text-white text-sm font-medium">
+                          {typeof completionPercentValue === "number"
+                            ? `${completionPercentValue}%`
+                            : "—"}
+                        </span>
                       </div>
                     </div>
-                    <span className="text-white text-sm font-medium">
-                      {dashboardData.classPerformance?.completionPercentage ||
-                        0}
-                      %
-                    </span>
-                  </div>
-                </div>
 
-                {/* Breakdown */}
-                <div className="grid grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-white text-2xl font-bold">
-                      {dashboardData.classPerformance?.completed || 0}
-                    </p>
-                    <p className="text-gray-400 text-sm">Completed</p>
+                    <div className="grid grid-cols-3 gap-4">
+                      <div>
+                        <p className="text-white text-2xl font-bold">
+                          {performanceMetrics.completed ?? "—"}
+                        </p>
+                        <p className="text-gray-400 text-sm">Completed</p>
+                      </div>
+                      <div>
+                        <p className="text-white text-2xl font-bold">
+                          {performanceMetrics.inProgress ?? "—"}
+                        </p>
+                        <p className="text-gray-400 text-sm">In Progress</p>
+                      </div>
+                      <div>
+                        <p className="text-white text-2xl font-bold">
+                          {performanceMetrics.total ?? "—"}
+                        </p>
+                        <p className="text-gray-400 text-sm">Total</p>
+                      </div>
+                    </div>
+                  </>
+                ) : (
+                  <div className="bg-white/10 border border-white/20 rounded-lg p-4 text-white">
+                    Performance analytics will appear once your classes start
+                    reporting progress.
                   </div>
-                  <div>
-                    <p className="text-white text-2xl font-bold">
-                      {dashboardData.classPerformance?.inProgress || 0}
-                    </p>
-                    <p className="text-gray-400 text-sm">In Progress</p>
-                  </div>
-                  <div>
-                    <p className="text-white text-2xl font-bold">
-                      {dashboardData.classPerformance?.total || 0}
-                    </p>
-                    <p className="text-gray-400 text-sm">Total</p>
-                  </div>
-                </div>
+                )}
               </div>
 
               {/* Classes Overview */}

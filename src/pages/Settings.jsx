@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Input from "../components/common/Input";
 import ToggleSwitch from "../components/common/ToggleSwitch";
+import { studentService } from "../services/studentService";
 
 const SettingItem = ({ title, description, control }) => (
   <div className="flex items-center justify-between py-4">
@@ -14,7 +15,7 @@ const SettingItem = ({ title, description, control }) => (
 );
 
 export default function Settings() {
-  const [email, setEmail] = useState("adaokafor@edulink360.com");
+  const [email, setEmail] = useState("");
   const [toggles, setToggles] = useState({
     assignmentUpdate: true,
     feedbackAlerts: true,
@@ -23,9 +24,38 @@ export default function Settings() {
     showProfile: true,
     performanceAnalytics: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const profile = await studentService.getProfile();
+        setEmail(profile?.email || "");
+      } catch (err) {
+        setError(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            err?.message ||
+            "Unable to load settings."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleToggleChange = (key) => {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+    setStatus({
+      type: "info",
+      message: "Preference syncing is coming soon in the MVP roadmap.",
+    });
   };
 
   return (
@@ -45,7 +75,34 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Account Info Section */}
+        {status && (
+          <div
+            className={`mb-6 px-4 py-2 rounded ${
+              status.type === "info"
+                ? "bg-blue-50 text-blue-700 border border-blue-100"
+                : ""
+            }`}
+          >
+            {status.message}
+          </div>
+        )}
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
+          </div>
+        )}
+
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading settings...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Account Info Section */}
         <div className="space-y-4 mb-8">
           <Input
             label="Email Address"
@@ -194,6 +251,8 @@ export default function Settings() {
             Delete Account
           </a>
         </div>
+          </>
+        )}
       </div>
     </div>
   );
