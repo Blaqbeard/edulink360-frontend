@@ -1,112 +1,91 @@
 import React from "react";
-import { NavLink, Link } from "react-router-dom";
+import { NavLink, useNavigate } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
 import {
-  LuLayoutDashboard,
-  LuMessageSquare,
-  LuFileText,
-  LuBell,
-  LuSettings,
-  LuLogOut,
-} from "react-icons/lu";
-import logo from "../../assets/images/logo.jpg";
-import smallLogo from "../../assets/images/logo.jpg"; // A smaller version of the logo for the slim sidebar
+  LayoutDashboard,
+  MessageSquare,
+  FileText,
+  Bell,
+  Settings,
+  LogOut,
+} from "lucide-react";
 
-const navLinks = [
-  { to: "/", text: "Dashboard", icon: <LuLayoutDashboard /> },
-  { to: "/messages", text: "Messages", icon: <LuMessageSquare /> },
-  { to: "/feedbacks", text: "Feedbacks", icon: <LuFileText /> },
-  { to: "/notifications", text: "Notifications", icon: <LuBell /> },
-];
+import logoImage from "../../assets/images/logo.jpg";
 
-// isSlim is for the tablet view, isSidebarOpen is for the mobile view
-export default function Sidebar({ isSlim, isSidebarOpen, setIsSidebarOpen }) {
-  const activeLinkStyle = {
-    backgroundColor: "#2563EB",
-    color: "white",
+const NavItem = ({ to, icon, children }) => (
+  <NavLink
+    to={to}
+    end
+    className={({ isActive }) =>
+      `flex items-center p-3 my-1 rounded-lg transition-colors ${
+        isActive
+          ? "bg-blue-600 text-white"
+          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+      }`
+    }
+  >
+    {icon}
+    <span className="ml-4 font-medium">{children}</span>
+  </NavLink>
+);
+
+export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
+  const { logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
   };
 
   return (
     <>
-      {/* Overlay for mobile view when sidebar is open */}
+      {/* Mobile Overlay: This darkens the background when the sidebar is open on mobile */}
       <div
-        className={`fixed inset-0 bg-black/50 z-30 lg:hidden ${
-          isSidebarOpen ? "block" : "hidden"
-        }`}
         onClick={() => setIsSidebarOpen(false)}
+        className={`fixed inset-0 bg-black bg-opacity-50 z-30 transition-opacity lg:hidden ${
+          isSidebarOpen ? "opacity-100" : "opacity-0 pointer-events-none"
+        }`}
       ></div>
 
-      {/* The Sidebar Itself */}
+      {/* --- THIS IS THE CORRECTED PART --- */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-[#0F172A] text-gray-300 flex flex-col z-40 transition-all duration-300
-          ${isSlim ? "w-20" : "w-64"}
-          lg:static lg:w-auto
+        className={`fixed inset-y-0 left-0 bg-gray-800 text-white z-40 flex flex-col w-64 transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
-          lg:translate-x-0
-        `}
+          lg:translate-x-0 lg:static lg:w-64`}
       >
-        {/* Logo Section */}
-        <div
-          className={`p-6 flex items-center ${
-            isSlim ? "justify-center" : "justify-start"
-          }`}
-        >
-          <Link to="/">
-            <img
-              src={isSlim ? smallLogo : logo}
-              alt="EduLink360 Logo"
-              className={isSlim ? "h-8" : "h-8"}
-            />
-          </Link>
+        {/* Logo */}
+        <div className="flex items-center justify-start h-20 px-6 border-b border-gray-700 flex-shrink-0">
+          <img src={logoImage} alt="EduLink360 Logo" className="h-10" />
         </div>
 
-        {/* Navigation Links */}
-        <nav className="flex-1 px-4 py-2 space-y-2">
-          {navLinks.map((link) => (
-            <NavLink
-              key={link.to}
-              to={link.to}
-              end={link.to === "/"}
-              style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-              className={`flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-                isSlim ? "justify-center" : ""
-              }`}
-              title={isSlim ? link.text : ""} // Show tooltip on hover in slim mode
-            >
-              <span className="text-xl">{link.icon}</span>
-              {!isSlim && <span>{link.text}</span>}
-            </NavLink>
-          ))}
+        {/* Navigation */}
+        <nav className="flex-1 px-4 py-4 space-y-2">
+          <NavItem to="/" icon={<LayoutDashboard />}>
+            Dashboard
+          </NavItem>
+          <NavItem to="/messages" icon={<MessageSquare />}>
+            Messages
+          </NavItem>
+          <NavItem to="/feedbacks" icon={<FileText />}>
+            Feedbacks
+          </NavItem>
+          <NavItem to="/notifications" icon={<Bell />}>
+            Notifications
+          </NavItem>
         </nav>
 
         {/* Bottom Section */}
-        <div
-          className={`px-4 py-4 border-t border-gray-700 ${
-            isSlim ? "space-y-0" : "space-y-2"
-          }`}
-        >
-          <NavLink
-            to="/settings"
-            style={({ isActive }) => (isActive ? activeLinkStyle : undefined)}
-            className={`flex items-center space-x-3 px-4 py-2 rounded-lg hover:bg-gray-700 transition-colors ${
-              isSlim ? "justify-center" : ""
-            }`}
-            title={isSlim ? "Settings" : ""}
-          >
-            <span className="text-xl">
-              <LuSettings />
-            </span>
-            {!isSlim && <span>Settings</span>}
-          </NavLink>
+        <div className="px-4 py-4 border-t border-gray-700">
+          <NavItem to="/settings" icon={<Settings />}>
+            Settings
+          </NavItem>
           <button
-            className={`w-full flex items-center space-x-3 px-4 py-2 rounded-lg text-red-400 hover:bg-red-900/50 transition-colors ${
-              isSlim ? "justify-center" : ""
-            }`}
-            title={isSlim ? "Log out" : ""}
+            onClick={handleLogout}
+            className="flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white w-full"
           >
-            <span className="text-xl">
-              <LuLogOut />
-            </span>
-            {!isSlim && <span>Log out</span>}
+            <LogOut />
+            <span className="ml-4 font-medium">Log out</span>
           </button>
         </div>
       </aside>

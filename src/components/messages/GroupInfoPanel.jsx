@@ -20,7 +20,7 @@ const InfoTabs = () => {
   ];
 
   return (
-    <div className="w-full border-b">
+    <div className="w-full border-b border-gray-100">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => (
           <button
@@ -72,7 +72,7 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
 
   if (!conversation) {
     return (
-      <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l p-6">
+      <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l border-gray-100 lg:flex-shrink-0 flex flex-col">
         <button onClick={onClose} className="mb-4">
           <ArrowLeft />
         </button>
