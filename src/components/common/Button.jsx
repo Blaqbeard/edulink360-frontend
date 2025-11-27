@@ -1,11 +1,9 @@
 import React from "react";
 
 /**
- * A reusable button component with different visual styles.
- *
  * @param {object} props
- * @param {React.ReactNode} props.children - The text or icon inside the button.
- * @param {function} [props.onClick] - The function to call when the button is clicked.
+ * @param {React.ReactNode} props.children
+ * @param {function} [props.onClick]
  * @param {'primary' | 'secondary' | 'danger'} [props.variant='primary'] - The style variant of the button.
  * @param {string} [props.className] - Optional additional CSS classes.
  */

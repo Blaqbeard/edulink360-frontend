@@ -23,7 +23,7 @@ const initialUserData = {
   studentId: "STU2025-234",
   class: "SS2D",
   initials: "AO",
-  avatarUrl: "", // We can leave this empty and use initials
+  avatarUrl: "",
 };
 
 const progressStats = [

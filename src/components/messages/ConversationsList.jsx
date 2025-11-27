@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Search, Star, MessageSquareText } from "lucide-react";
 
-// Sub-component for the filter tabs for better organization
 const FilterTabs = () => {
   const [activeTab, setActiveTab] = useState("Groups");
   const tabs = ["Groups", "Students", "Favorites", "Unread"];
@@ -25,7 +24,6 @@ const FilterTabs = () => {
   );
 };
 
-// Sub-component for a single conversation item to keep the main component clean
 const ConversationItem = ({ convo, isActive, onClick }) => (
   <button
     onClick={onClick}
@@ -42,7 +40,6 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
 
     {/* Avatar */}
     <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-purple-100">
-      {/* In a real app, you'd use an <img> tag here if an image URL is available */}
       <img src={convo.avatarUrl} alt="" className="h-6 w-6" />
     </div>
 
@@ -85,10 +82,15 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
 export default function ConversationsList({
   conversations,
   activeConversationId,
-  setActiveConversationId,
+  onConversationSelect, // Use the new prop name
 }) {
   return (
-    <div className="w-full md:w-[360px] h-full border-r bg-white flex flex-col flex-shrink-0">
+    // 1. Add conditional classes to hide this component on mobile when a chat is active.
+    <div
+      className={`w-full md:w-[360px] h-full border-r bg-white flex-col flex-shrink-0 ${
+        activeConversationId ? "hidden md:flex" : "flex"
+      }`}
+    >
       {/* Header Area */}
       <div className="p-4 space-y-4 border-b">
         <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
@@ -113,7 +115,8 @@ export default function ConversationsList({
             key={convo.id}
             convo={convo}
             isActive={activeConversationId === convo.id}
-            onClick={() => setActiveConversationId(convo.id)}
+            // 2. Call the correct handler function from the parent.
+            onClick={() => onConversationSelect(convo.id)}
           />
         ))}
       </div>

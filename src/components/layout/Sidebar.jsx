@@ -1,4 +1,3 @@
-// src/components/layout/Sidebar.js
 import React from "react";
 import { NavLink, Link, useLocation } from "react-router-dom";
 import {

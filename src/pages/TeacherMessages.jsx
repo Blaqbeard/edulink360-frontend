@@ -13,7 +13,7 @@ function TeacherMessages() {
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showMobileConversations, setShowMobileConversations] = useState(false);
   const [showMobileDetails, setShowMobileDetails] = useState(false);
-  
+
   // API state
   const [groups, setGroups] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -33,8 +33,9 @@ function TeacherMessages() {
     const diffInSeconds = Math.floor((now - date) / 1000);
     if (diffInSeconds < 60) return "Just now";
     if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)}h ago`;
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
   // Fetch conversations based on active tab
@@ -54,9 +55,16 @@ function TeacherMessages() {
   const fetchConversations = async () => {
     try {
       setLoading(true);
-      const type = activeTab === "groups" ? "groups" : activeTab === "favorites" ? "favorites" : activeTab === "students" ? "students" : "unread";
+      const type =
+        activeTab === "groups"
+          ? "groups"
+          : activeTab === "favorites"
+          ? "favorites"
+          : activeTab === "students"
+          ? "students"
+          : "unread";
       const response = await messageService.getConversations(type);
-      
+
       if (type === "groups") {
         setGroups(response.data?.groups || []);
       } else if (type === "favorites") {
@@ -78,12 +86,13 @@ function TeacherMessages() {
     try {
       if (messages[conversationId]) return; // Already loaded
       const response = await messageService.getMessages(conversationId);
-      setMessages(prev => ({
+      setMessages((prev) => ({
         ...prev,
-        [conversationId]: response.data?.messages?.map(msg => ({
-          ...msg,
-          time: formatTime(msg.createdAt),
-        })) || []
+        [conversationId]:
+          response.data?.messages?.map((msg) => ({
+            ...msg,
+            time: formatTime(msg.createdAt),
+          })) || [],
       }));
     } catch (error) {
       console.error("Error fetching messages:", error);
@@ -92,7 +101,9 @@ function TeacherMessages() {
 
   const fetchConversationDetails = async (conversationId) => {
     try {
-      const response = await messageService.getConversationDetails(conversationId);
+      const response = await messageService.getConversationDetails(
+        conversationId
+      );
       setConversationDetails(response.data);
     } catch (error) {
       console.error("Error fetching conversation details:", error);
@@ -103,18 +114,26 @@ function TeacherMessages() {
     try {
       await messageService.markAsRead(conversationId);
       // Update local state to remove unread badge
-      setGroups(prev => prev.map(conv => 
-        conv.id === conversationId ? { ...conv, unread: 0 } : conv
-      ));
-      setFavorites(prev => prev.map(conv => 
-        conv.id === conversationId ? { ...conv, unread: 0 } : conv
-      ));
-      setStudents(prev => prev.map(conv => 
-        conv.id === conversationId ? { ...conv, unread: 0 } : conv
-      ));
-      setUnreadConversations(prev => prev.map(conv => 
-        conv.id === conversationId ? { ...conv, unread: 0 } : conv
-      ));
+      setGroups((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unread: 0 } : conv
+        )
+      );
+      setFavorites((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unread: 0 } : conv
+        )
+      );
+      setStudents((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unread: 0 } : conv
+        )
+      );
+      setUnreadConversations((prev) =>
+        prev.map((conv) =>
+          conv.id === conversationId ? { ...conv, unread: 0 } : conv
+        )
+      );
     } catch (error) {
       console.error("Error marking as read:", error);
     }
@@ -128,9 +147,9 @@ function TeacherMessages() {
       setSendingMessage(true);
       await messageService.sendMessage(selectedConversation, {
         text: newMessage,
-        type: "text"
+        type: "text",
       });
-      
+
       // Refresh messages
       await fetchMessages(selectedConversation);
       setNewMessage("");
@@ -388,15 +407,21 @@ function TeacherMessages() {
   // Get messages for selected conversation
   const getCurrentMessages = () => {
     if (!selectedConversation) return [];
-    return messages[selectedConversation] || messagesByConversation[selectedConversation] || [];
+    return (
+      messages[selectedConversation] ||
+      messagesByConversation[selectedConversation] ||
+      []
+    );
   };
 
   // Get selected conversation object
-  const selectedConv = selectedConversation 
-    ? getCurrentConversations().find(conv => conv.id === selectedConversation)
+  const selectedConv = selectedConversation
+    ? getCurrentConversations().find((conv) => conv.id === selectedConversation)
     : null;
-  
-  const isSelectedGroup = selectedConv ? selectedConv.hasOwnProperty("title") : false;
+
+  const isSelectedGroup = selectedConv
+    ? selectedConv.hasOwnProperty("title")
+    : false;
   const activeMessages = getCurrentMessages();
 
   const messagesByConversation = {
@@ -487,7 +512,6 @@ function TeacherMessages() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeTab]);
-
 
   return (
     <div className="min-h-screen flex bg-gray-50">
@@ -1026,24 +1050,36 @@ function TeacherMessages() {
                   <i className="bi bi-info-circle text-gray-900 text-sm"></i>
                 </button>
                 {/* Telephone Button */}
-                <button 
-                  onClick={() => alert("Coming soon: Voice calls will be available in the next update.")}
+                <button
+                  onClick={() =>
+                    alert(
+                      "Coming soon: Voice calls will be available in the next update."
+                    )
+                  }
                   className="hidden md:flex w-9 h-9 border border-gray-300 rounded items-center justify-center hover:bg-gray-50 transition-colors"
                   title="Coming soon: Voice calls"
                 >
                   <i className="bi bi-telephone text-gray-900 text-sm"></i>
                 </button>
                 {/* Video Camera Button */}
-                <button 
-                  onClick={() => alert("Coming soon: Video calls will be available in the next update.")}
+                <button
+                  onClick={() =>
+                    alert(
+                      "Coming soon: Video calls will be available in the next update."
+                    )
+                  }
                   className="hidden md:flex w-9 h-9 border border-gray-300 rounded items-center justify-center hover:bg-gray-50 transition-colors"
                   title="Coming soon: Video calls"
                 >
                   <i className="bi bi-camera-video text-gray-900 text-sm"></i>
                 </button>
                 {/* More Options Button */}
-                <button 
-                  onClick={() => alert("Coming soon: More options will be available in the next update.")}
+                <button
+                  onClick={() =>
+                    alert(
+                      "Coming soon: More options will be available in the next update."
+                    )
+                  }
                   className="w-9 h-9 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 transition-colors"
                   title="Coming soon: More options"
                 >
@@ -1236,9 +1272,12 @@ function TeacherMessages() {
 
             {/* Message Input */}
             {selectedConv && (
-              <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 bg-white">
+              <form
+                onSubmit={handleSendMessage}
+                className="p-4 border-t border-gray-200 bg-white"
+              >
                 <div className="flex items-center gap-3">
-                  <i 
+                  <i
                     className="bi bi-paperclip text-gray-500 text-xl cursor-pointer hover:text-[#00B4D8] transition-colors"
                     title="Coming soon: File attachments"
                   ></i>
@@ -1250,11 +1289,11 @@ function TeacherMessages() {
                     className="flex-1 px-4 py-2 bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#00B4D8] text-sm"
                     disabled={sendingMessage}
                   />
-                  <i 
+                  <i
                     className="bi bi-emoji-smile text-gray-500 text-xl cursor-pointer hover:text-[#00B4D8] transition-colors"
                     title="Coming soon: Emoji picker"
                   ></i>
-                  <i 
+                  <i
                     className="bi bi-mic text-gray-500 text-xl cursor-pointer hover:text-[#00B4D8] transition-colors"
                     title="Coming soon: Voice messages"
                   ></i>

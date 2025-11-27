@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
 
 /**
- * A custom hook for fetching data from an API endpoint.
- *
- * @param {string} url - The URL to fetch data from.
+ * @param {string} url -
  * @param {object} [options] - Optional fetch options (e.g., method, headers, body).
  * @returns {{data: any, loading: boolean, error: Error|null}}
  */
@@ -47,7 +45,7 @@ export default function useFetch(url, options) {
     return () => {
       controller.abort();
     };
-  }, [url]); // Re-run the effect if the URL changes
+  }, [url]);
 
   return { data, loading, error };
 }

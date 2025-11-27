@@ -1,13 +1,52 @@
 import React from "react";
-import { LineChart } from "lucide-react"; // Example icon
-import Card from "../common/Card"; // Using our base card
+import { LineChart } from "lucide-react";
+import Card from "../common/Card";
 
-export default function CourseProgress() {
-  // Mock data based on your design
-  const progress = 75;
-  const completed = 12;
-  const inProgress = 4;
-  const total = 16;
+export default function CourseProgress({
+  progressData,
+  progress,
+  completed,
+  inProgress,
+  total,
+}) {
+  const defaultData = {
+    completedAssignments: 0,
+    inProgress: 0,
+    total: 0,
+    progress: 0,
+  };
+
+  const completedFromData =
+    typeof progressData?.completedAssignments === "number"
+      ? progressData.completedAssignments
+      : defaultData.completedAssignments;
+  const inProgressFromData =
+    typeof progressData?.inProgress === "number"
+      ? progressData.inProgress
+      : defaultData.inProgress;
+  const totalFromData =
+    typeof progressData?.total === "number"
+      ? progressData.total
+      : defaultData.total;
+
+  const fallbackProgress =
+    typeof progressData?.progress === "number"
+      ? progressData.progress
+      : totalFromData > 0
+      ? Math.round((completedFromData / totalFromData) * 100)
+      : Math.round(progressData?.averageGrade || 0);
+
+  const resolvedCompleted =
+    typeof completed === "number" ? completed : completedFromData;
+  const resolvedInProgress =
+    typeof inProgress === "number" ? inProgress : inProgressFromData;
+  const resolvedTotal = typeof total === "number" ? total : totalFromData;
+  const resolvedProgress =
+    typeof progress === "number" ? progress : fallbackProgress;
+
+  const safeProgress = Number.isFinite(resolvedProgress)
+    ? Math.max(0, Math.min(resolvedProgress, 100))
+    : 0;
 
   return (
     <Card className="bg-blue-600 text-white">
@@ -17,32 +56,30 @@ export default function CourseProgress() {
       </div>
       <p className="text-sm text-blue-200 mt-1">Overall Completion Status</p>
 
-      {/* Progress Bar */}
       <div className="mt-6">
-        <div className="flex justify-between items-center mb-1">
+        <div className="flex justify-between items-center mb-2">
           <span className="text-sm font-medium">Completed</span>
-          <span className="text-sm font-medium">{progress}%</span>
+          <span className="text-sm font-semibold">{safeProgress}%</span>
         </div>
-        <div className="w-full bg-blue-800 rounded-full h-2.5">
+        <div className="w-full bg-blue-500/40 rounded-full h-2.5 overflow-hidden">
           <div
-            className="bg-white h-2.5 rounded-full"
-            style={{ width: `${progress}%` }}
-          ></div>
+            className="bg-white h-2.5 rounded-full transition-all duration-300"
+            style={{ width: `${safeProgress}%` }}
+          />
         </div>
       </div>
 
-      {/* Stats at the bottom */}
       <div className="mt-6 grid grid-cols-3 gap-4 text-center">
         <div>
-          <p className="text-2xl font-bold">{completed}</p>
+          <p className="text-2xl font-bold">{resolvedCompleted ?? 0}</p>
           <p className="text-sm text-blue-200">Completed</p>
         </div>
         <div>
-          <p className="text-2xl font-bold">{inProgress}</p>
+          <p className="text-2xl font-bold">{resolvedInProgress ?? 0}</p>
           <p className="text-sm text-blue-200">In Progress</p>
         </div>
         <div>
-          <p className="text-2xl font-bold">{total}</p>
+          <p className="text-2xl font-bold">{resolvedTotal ?? 0}</p>
           <p className="text-sm text-blue-200">Total</p>
         </div>
       </div>

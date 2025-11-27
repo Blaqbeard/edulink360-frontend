@@ -5,6 +5,7 @@ import ProtectedRoute from "./ProtectedRoute";
 // Layouts
 import AppLayout from "../components/layout/AppLayout";
 import AuthLayout from "../components/layout/AuthLayout";
+import MessagesLayout from "../components/layout/MessagesLayout";
 
 // Student Pages
 import Dashboard from "../pages/Dashboard";
@@ -24,15 +25,15 @@ import TeacherNotifications from "../pages/TeacherNotifications";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* AUTH PAGES - PUBLIC */}
+      {/* PUBLIC AUTH PAGES */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
       </Route>
 
-      {/* SIGNUP PAGE - Standalone with its own layout */}
+      {/* Standalone signup page */}
       <Route path="/signup" element={<Signup />} />
 
-      {/* STUDENT APP PAGES - Protected for students only */}
+      {/* STUDENT APP PAGES */}
       <Route
         path="/"
         element={
@@ -42,9 +43,20 @@ export default function AppRoutes() {
         }
       >
         <Route index element={<Dashboard />} />
-        <Route path="messages" element={<Messages />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
+      </Route>
+
+      {/* Student Messages use a custom layout */}
+      <Route
+        path="/messages"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <MessagesLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Messages />} />
       </Route>
 
       {/* TEACHER APP PAGES - Protected for teachers only (standalone layouts) */}

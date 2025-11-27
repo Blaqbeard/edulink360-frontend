@@ -10,7 +10,6 @@ import {
   Cog,
 } from "lucide-react";
 
-// Sub-component for the tabs below the header
 const InfoTabs = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const tabs = [
@@ -42,7 +41,6 @@ const InfoTabs = () => {
   );
 };
 
-// Sub-component for a single member in the list
 const MemberItem = ({ member }) => {
   const statusColors = {
     online: "bg-green-500",
@@ -72,11 +70,10 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
     return null;
   }
 
-  // If there's no active conversation, show a fallback (though this case is unlikely if isOpen is true)
   if (!conversation) {
     return (
-      <div className="absolute inset-0 z-20 bg-white lg:relative lg:w-1/4 lg:border-l p-6">
-        <button onClick={onClose} className="lg:hidden mb-4">
+      <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l p-6">
+        <button onClick={onClose} className="mb-4">
           <ArrowLeft />
         </button>
         <p>No conversation selected.</p>
@@ -85,20 +82,20 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
-    // This div is the main container. It's positioned absolutely on mobile/tablet
-    // and relatively on desktop.
-    <div className="absolute inset-0 z-20 bg-white lg:static lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
-      {/* Top bar with back arrow for mobile */}
-      <div className="p-4 border-b lg:hidden">
-        <button onClick={onClose} className="text-gray-600">
+    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
+      {/* UNIVERSAL HEADER WITH BACK ARROW */}
+
+      <div className="p-4 border-b flex items-center space-x-4 flex-shrink-0">
+        <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
           <ArrowLeft size={24} />
         </button>
+        <h2 className="font-semibold text-lg text-gray-800">Group Info</h2>
       </div>
 
-      {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-y-auto p-6">
-        {/* Group Header */}
-        <div className="flex flex-col items-center text-center pb-6">
+      {/* Main Scrollable Content */}
+      <div className="flex-1 flex flex-col overflow-y-auto">
+        {/* Group Header (inside the scrollable area) */}
+        <div className="flex flex-col items-center text-center p-6">
           <div className="h-20 w-20 mb-4 flex items-center justify-center rounded-full bg-purple-100">
             <img src={conversation.avatarUrl} alt="" className="h-8 w-8" />
           </div>
@@ -124,8 +121,8 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
         {/* Tab Navigation */}
         <InfoTabs />
 
-        {/* Tab Content (Currently only showing "Overview") */}
-        <div className="py-6 space-y-6">
+        {/* Tab Content */}
+        <div className="p-6 space-y-6">
           {/* Description Section */}
           <div>
             <h3 className="font-semibold text-gray-800 mb-2">Description</h3>

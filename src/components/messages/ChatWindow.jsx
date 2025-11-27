@@ -1,20 +1,18 @@
 import React from "react";
+
 import {
   Phone,
   Video,
   MoreVertical,
   Send,
   Paperclip,
-  CheckCheck,
+  ArrowLeft,
   Play,
-  Check,
   Lightbulb,
   ArrowRight,
+  Check,
 } from "lucide-react";
 
-// --- Sub-Components for Different Message Types ---
-
-// Default text message bubble
 const TextMessage = ({ msg, conversation }) => (
   <div
     className={`flex items-end gap-2 ${
@@ -144,14 +142,12 @@ export default function ChatWindow({
   conversation,
   onHeaderClick,
   isPanelOpen,
+  onBack, // 2. Accept the new 'onBack' prop
 }) {
+  // If no conversation is selected, show a placeholder on desktop and nothing on mobile.
   if (!conversation) {
     return (
-      <div
-        className={`flex-1 items-center justify-center h-full bg-gray-50 ${
-          isPanelOpen ? "hidden lg:flex" : "flex"
-        }`}
-      >
+      <div className="hidden md:flex flex-1 items-center justify-center h-full bg-gray-50">
         <p className="text-gray-500">Select a conversation to start chatting</p>
       </div>
     );
@@ -181,21 +177,31 @@ export default function ChatWindow({
       }`}
     >
       {/* Chat Header */}
-      <button
-        onClick={onHeaderClick}
-        className="flex items-center justify-between p-4 border-b w-full text-left hover:bg-gray-50 transition-colors"
-      >
+      <div className="flex items-center justify-between p-4 border-b w-full">
         <div className="flex items-center space-x-3">
-          <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full bg-purple-100">
-            <img src={conversation.avatarUrl} alt="" className="h-6 w-6" />
-          </div>
-          <div>
-            <p className="font-bold text-lg text-gray-900">
-              {conversation.name}
-            </p>
-            <p className="text-sm text-gray-500">{conversation.sender}</p>
-          </div>
+          {/* 4. BACK ARROW FOR MOBILE */}
+          <button onClick={onBack} className="md:hidden text-gray-600 mr-2">
+            <ArrowLeft size={24} />
+          </button>
+
+          {/* The rest of the header is a button to open the info panel */}
+          <button
+            onClick={onHeaderClick}
+            className="flex items-center space-x-3 text-left"
+          >
+            <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full bg-purple-100">
+              <img src={conversation.avatarUrl} alt="" className="h-6 w-6" />
+            </div>
+            <div>
+              <p className="font-bold text-lg text-gray-900">
+                {conversation.name}
+              </p>
+              <p className="text-sm text-gray-500">{conversation.sender}</p>
+            </div>
+          </button>
         </div>
+
+        {/* Header Icons */}
         <div className="flex items-center space-x-2 text-gray-500">
           <div className="h-10 w-10 flex items-center justify-center border rounded-full hover:bg-gray-100">
             <Phone size={20} />
@@ -207,16 +213,16 @@ export default function ChatWindow({
             <MoreVertical size={20} />
           </div>
         </div>
-      </button>
+      </div>
 
-      {/* Messages Area */}
+      {/* Messages Area (unchanged) */}
       <div className="flex-1 p-6 overflow-y-auto bg-gray-50">
         <div className="space-y-8">
           {conversation.messages.map(renderMessage)}
         </div>
       </div>
 
-      {/* Message Input */}
+      {/* Message Input (unchanged) */}
       <div className="p-4 bg-white border-t">
         <div className="flex items-center space-x-4 bg-gray-100 border border-gray-200 rounded-lg px-4 py-2">
           <button className="text-gray-500 hover:text-gray-700">

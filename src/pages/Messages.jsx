@@ -3,8 +3,6 @@ import ConversationsList from "../components/messages/ConversationsList";
 import ChatWindow from "../components/messages/ChatWindow";
 import GroupInfoPanel from "../components/messages/GroupInfoPanel";
 
-// --- The New, Comprehensive Mock Data ---
-// This data structure now includes all the fields required by our corrected components.
 const mockConversations = [
   {
     id: 1,
@@ -14,7 +12,7 @@ const mockConversations = [
     lastMessage: "Great work on the lab report",
     unreadCount: 3,
     isStarred: true,
-    avatarUrl: "/book-icon.svg", // NOTE: Place 'book-icon.svg' in your /public folder
+    avatarUrl: "/book-icon.svg",
     currentUserInitial: "S",
     description:
       "Physics 101 class group for discussions, assignments, and collaborative learning.",
@@ -88,7 +86,7 @@ const mockConversations = [
           "/image-placeholder.png",
           "/image-placeholder.png",
         ],
-      }, // NOTE: Place a placeholder image in your /public folder
+      },
     ],
   },
   {
@@ -140,33 +138,35 @@ const mockConversations = [
 ];
 
 export default function Messages() {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [activeConversationId, setActiveConversationId] = useState(1);
-
-  // 1. Add the new state to control the GroupInfoPanel's visibility
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [isInfoPanelOpen, setIsInfoPanelOpen] = useState(false);
 
-  const activeConversation = conversations.find(
+  const activeConversation = mockConversations.find(
     (c) => c.id === activeConversationId
   );
 
+  // handler function to manage conversation selection.
+  const handleConversationSelect = (id) => {
+    setActiveConversationId(id);
+    setIsInfoPanelOpen(false);
+  };
+
   return (
-    // 2. Add 'relative' to the container to allow absolute positioning of the panel
     <div className="flex h-full w-full relative overflow-hidden">
       <ConversationsList
-        conversations={conversations}
+        conversations={mockConversations}
         activeConversationId={activeConversationId}
-        setActiveConversationId={setActiveConversationId}
+        onConversationSelect={handleConversationSelect}
       />
       <ChatWindow
         conversation={activeConversation}
-        // 3. Pass the function to open the panel and the panel's current state
         onHeaderClick={() => setIsInfoPanelOpen(true)}
         isPanelOpen={isInfoPanelOpen}
+        // the 'onBack' prop to allow navigation back to the list.
+        onBack={() => setActiveConversationId(null)}
       />
       <GroupInfoPanel
         conversation={activeConversation}
-        // 4. Pass the state and the function to close the panel
         isOpen={isInfoPanelOpen}
         onClose={() => setIsInfoPanelOpen(false)}
       />
