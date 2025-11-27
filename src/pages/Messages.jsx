@@ -3,8 +3,9 @@ import ConversationsList from "../components/messages/ConversationsList";
 import ChatWindow from "../components/messages/ChatWindow";
 import GroupInfoPanel from "../components/messages/GroupInfoPanel";
 
-// This data structure now includes all the fields required by our corrected components.
+// The mockConversations data is correct and does not need changes.
 const mockConversations = [
+  // ... your existing mock data ...
   {
     id: 1,
     name: "Web Development",
@@ -13,7 +14,7 @@ const mockConversations = [
     lastMessage: "Great work on the lab report",
     unreadCount: 3,
     isStarred: true,
-    avatarUrl: "/book-icon.svg", // NOTE: Place 'book-icon.svg' in your /public folder
+    avatarUrl: "/book-icon.svg",
     currentUserInitial: "S",
     description:
       "Physics 101 class group for discussions, assignments, and collaborative learning.",
@@ -139,26 +140,34 @@ const mockConversations = [
 ];
 
 export default function Messages() {
-  const [conversations, setConversations] = useState(mockConversations);
-  const [activeConversationId, setActiveConversationId] = useState(1);
-
+  // 1. Start with no conversation selected to show the list first on mobile.
+  const [activeConversationId, setActiveConversationId] = useState(null);
   const [isInfoPanelOpen, setIsInfoPanelOpen] = useState(false);
 
-  const activeConversation = conversations.find(
+  const activeConversation = mockConversations.find(
     (c) => c.id === activeConversationId
   );
+
+  // 2. Create a handler function to manage conversation selection.
+  const handleConversationSelect = (id) => {
+    setActiveConversationId(id);
+    setIsInfoPanelOpen(false); // Also close the info panel when switching chats.
+  };
 
   return (
     <div className="flex h-full w-full relative overflow-hidden">
       <ConversationsList
-        conversations={conversations}
+        conversations={mockConversations}
         activeConversationId={activeConversationId}
-        setActiveConversationId={setActiveConversationId}
+        // Pass the new handler instead of the raw state setter.
+        onConversationSelect={handleConversationSelect}
       />
       <ChatWindow
         conversation={activeConversation}
         onHeaderClick={() => setIsInfoPanelOpen(true)}
         isPanelOpen={isInfoPanelOpen}
+        // 3. Add the 'onBack' prop to allow navigation back to the list.
+        onBack={() => setActiveConversationId(null)}
       />
       <GroupInfoPanel
         conversation={activeConversation}
