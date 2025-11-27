@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { studentService } from "../services/studentService";
+import { useNotifications } from "../context/NotificationContext";
 
 const formatDate = (value) => {
   if (!value) return "No due date";
@@ -15,11 +16,20 @@ const formatDate = (value) => {
 };
 
 const getStatusBadge = (assignment) => {
-  if (assignment?.status) {
-    return assignment.status.toUpperCase();
+  const statusCandidates = [
+    assignment?.submissionStatus,
+    assignment?.status,
+    assignment?.submission?.status,
+    assignment?.submission?.grade ? "GRADED" : null,
+    assignment?.submitted ? "SUBMITTED" : null,
+    assignment?.hasSubmitted ? "SUBMITTED" : null,
+  ].filter(Boolean);
+
+  if (statusCandidates.length > 0) {
+    return statusCandidates[0].toUpperCase();
   }
 
-  if (assignment?.submittedAt || assignment?.submission) {
+  if (assignment?.submission || assignment?.submissionId) {
     return "SUBMITTED";
   }
 
@@ -41,6 +51,7 @@ export default function Assignments() {
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null);
+  const { refreshCount } = useNotifications();
 
   useEffect(() => {
     setFeedback(null);
@@ -93,6 +104,22 @@ export default function Assignments() {
       setStatusMessage(null);
       await studentService.submitAssignment(selectedAssignment.id, selectedFile);
       setSelectedFile(null);
+      refreshCount?.();
+      setAssignments((prev) =>
+        prev.map((assignment) =>
+          assignment.id === selectedAssignment.id
+            ? {
+                ...assignment,
+                submissionStatus: "SUBMITTED",
+                submittedAt: new Date().toISOString(),
+                submission: {
+                  ...(assignment.submission || {}),
+                  submittedAt: new Date().toISOString(),
+                },
+              }
+            : assignment
+        )
+      );
       await fetchAssignments();
       setStatusMessage("Assignment submitted successfully.");
     } catch (err) {

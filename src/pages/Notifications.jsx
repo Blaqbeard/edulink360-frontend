@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { notificationService } from "../services/notificationService";
+import { useNotifications } from "../context/NotificationContext";
 
 const iconClasses = {
   submission: { icon: "bi-file-earmark-check", color: "bg-blue-100 text-blue-600" },
@@ -29,9 +30,15 @@ export default function Notifications() {
   const [error, setError] = useState(null);
   const [filter, setFilter] = useState("all");
   const [statusMessage, setStatusMessage] = useState(null);
+  const { refreshCount } = useNotifications();
 
   useEffect(() => {
     fetchNotifications();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
   }, []);
 
   const fetchNotifications = async () => {
@@ -43,6 +50,7 @@ export default function Notifications() {
         limit: 50,
       });
       setNotifications(list);
+      refreshCount?.();
     } catch (err) {
       setError(
         err?.message ||

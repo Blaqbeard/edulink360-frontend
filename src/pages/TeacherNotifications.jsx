@@ -1,10 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { notificationService } from "../services/notificationService";
+import { useNotifications } from "../context/NotificationContext";
 
 function TeacherNotifications() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { refreshCount } = useNotifications();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +58,11 @@ function TeacherNotifications() {
     fetchNotifications();
   }, []);
 
+  useEffect(() => {
+    const interval = setInterval(fetchNotifications, 20000);
+    return () => clearInterval(interval);
+  }, []);
+
   const fetchNotifications = async () => {
     try {
       setLoading(true);
@@ -75,6 +82,7 @@ function TeacherNotifications() {
       }));
       setNotifications(formattedNotifications);
       setUnreadCount(formattedNotifications.filter((n) => n.unread).length);
+      refreshCount?.();
     } catch (error) {
       console.error("Error fetching notifications:", error);
     } finally {
@@ -407,6 +415,12 @@ function TeacherNotifications() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={fetchNotifications}
+                className="px-4 py-2 rounded-lg border border-[#0b1633] text-sm font-semibold text-[#0b1633] hover:bg-[#0b1633] hover:text-white transition-colors"
+              >
+                Refresh
+              </button>
               <button
                 onClick={handleMarkAllAsRead}
                 disabled={unreadCount === 0}

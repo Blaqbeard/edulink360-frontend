@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useNotifications } from "../context/NotificationContext";
 import { dashboardService } from "../services/dashboardService";
@@ -42,82 +42,87 @@ function TeacherDashboard() {
       ? Math.round(performanceMetrics.completionPercentage)
       : null;
 
-  useEffect(() => {
-    const fetchDashboardData = async () => {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const fetchDashboardData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const [dashboardSummary, classesResponse] = await Promise.all([
-          dashboardService.getTeacherDashboard().catch(() => null),
-          teacherService.getClasses().catch(() => []),
-        ]);
+      const [dashboardSummary, classesResponse] = await Promise.all([
+        dashboardService.getTeacherDashboard().catch(() => null),
+        teacherService.getClasses().catch(() => []),
+      ]);
 
-        const classList = Array.isArray(classesResponse)
-          ? classesResponse
-          : classesResponse?.classes ?? [];
-        setTeacherClasses(classList);
+      const classList = Array.isArray(classesResponse)
+        ? classesResponse
+        : classesResponse?.classes ?? [];
+      setTeacherClasses(classList);
 
-        const totalClasses =
-          dashboardSummary?.totalClasses ?? classList.length ?? 0;
+      const totalClasses =
+        dashboardSummary?.totalClasses ?? classList.length ?? 0;
 
-        const stats = {
-          totalStudents: dashboardSummary?.totalStudents ?? 0,
-          pendingReviews:
-            dashboardSummary?.pendingReviews ??
-            dashboardSummary?.pendingAssignments ??
-            0,
-          progressRate: dashboardSummary?.progressRate ?? 0,
-          totalClasses,
-        };
+      const stats = {
+        totalStudents: dashboardSummary?.totalStudents ?? 0,
+        pendingReviews:
+          dashboardSummary?.pendingReviews ??
+          dashboardSummary?.pendingAssignments ??
+          0,
+        progressRate: dashboardSummary?.progressRate ?? 0,
+        totalClasses,
+      };
 
-        const completedClasses = toNumberOrNull(
-          dashboardSummary?.completedClasses
-        );
-        const inProgressClasses = toNumberOrNull(
-          dashboardSummary?.inProgressClasses
-        );
-        const completionFromApi = toNumberOrNull(
-          dashboardSummary?.completionPercentage ??
-            dashboardSummary?.progressRate
-        );
-        const derivedCompletion =
-          completionFromApi ??
-          (completedClasses !== null && totalClasses > 0
-            ? (completedClasses / totalClasses) * 100
-            : null);
-        const completionPercentage = clampPercent(derivedCompletion);
+      const completedClasses = toNumberOrNull(
+        dashboardSummary?.completedClasses
+      );
+      const inProgressClasses = toNumberOrNull(
+        dashboardSummary?.inProgressClasses
+      );
+      const completionFromApi = toNumberOrNull(
+        dashboardSummary?.completionPercentage ??
+          dashboardSummary?.progressRate
+      );
+      const derivedCompletion =
+        completionFromApi ??
+        (completedClasses !== null && totalClasses > 0
+          ? (completedClasses / totalClasses) * 100
+          : null);
+      const completionPercentage = clampPercent(derivedCompletion);
 
-        const hasPerformanceData =
-          completionPercentage !== null ||
-          completedClasses !== null ||
-          inProgressClasses !== null ||
-          totalClasses > 0;
+      const hasPerformanceData =
+        completionPercentage !== null ||
+        completedClasses !== null ||
+        inProgressClasses !== null ||
+        totalClasses > 0;
 
-        const classPerformance = hasPerformanceData
-          ? {
-              completionPercentage,
-              completed: completedClasses,
-              inProgress: inProgressClasses,
-              total: totalClasses || null,
-            }
-          : null;
+      const classPerformance = hasPerformanceData
+        ? {
+            completionPercentage,
+            completed: completedClasses,
+            inProgress: inProgressClasses,
+            total: totalClasses || null,
+          }
+        : null;
 
-        setDashboardData({
-          stats,
-          recentSubmissions: dashboardSummary?.recentSubmissions ?? [],
-          classPerformance,
-        });
-      } catch (err) {
-        setError(err.message || "Failed to load dashboard data");
-        console.error("Teacher dashboard error:", err);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchDashboardData();
+      setDashboardData({
+        stats,
+        recentSubmissions: dashboardSummary?.recentSubmissions ?? [],
+        classPerformance,
+      });
+    } catch (err) {
+      setError(err.message || "Failed to load dashboard data");
+      console.error("Teacher dashboard error:", err);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  useEffect(() => {
+    const interval = setInterval(fetchDashboardData, 20000);
+    return () => clearInterval(interval);
+  }, [fetchDashboardData]);
 
   const handleAssignmentFormChange = (e) => {
     const { name, value } = e.target;
@@ -433,6 +438,18 @@ function TeacherDashboard() {
             </div>
           ) : (
             <>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Dashboard overview
+                </h2>
+                <button
+                  onClick={fetchDashboardData}
+                  className="self-start px-4 py-2 bg-[#0b1633] text-white text-sm font-semibold rounded-lg hover:bg-[#1A2332] transition-colors"
+                >
+                  Refresh
+                </button>
+              </div>
+
               {/* Summary Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {/* Pending Reviews Card */}
