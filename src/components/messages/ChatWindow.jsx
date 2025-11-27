@@ -130,7 +130,7 @@ const ImageMessage = ({ msg, conversation }) => (
       </div>
       <p className="text-xs mt-1 text-right text-gray-400">{msg.time}</p>
     </div>
-    <div className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-200 text-gray-600 font-semibold text-xs">
+    <div className="h-6 w-6 flex-shrink-0 flex items-center justify-center rounded-full bg-gray-100 text-gray-600 font-semibold text-xs">
       {conversation.currentUserInitial}
     </div>
   </div>
@@ -224,7 +224,7 @@ export default function ChatWindow({
 
       {/* Message Input (unchanged) */}
       <div className="p-4 bg-white border-t">
-        <div className="flex items-center space-x-4 bg-gray-100 border border-gray-200 rounded-lg px-4 py-2">
+        <div className="flex items-center space-x-4 bg-gray-100 border border-gray-100 rounded-lg px-4 py-2">
           <button className="text-gray-500 hover:text-gray-700">
             <Paperclip size={20} />
           </button>

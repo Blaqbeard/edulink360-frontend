@@ -14,6 +14,7 @@ const clampNumber = (value, fallback = 0) => {
 export default function Dashboard() {
   const { dashboardStats, recentAssignments, recentFeedbacks, loading, error } =
     useStudentDashboard();
+
   const assignments = Array.isArray(recentAssignments)
     ? recentAssignments
     : [];
@@ -89,8 +90,15 @@ export default function Dashboard() {
   return (
     <div className="p-4 md:p-8 space-y-8">
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {stats.map((stat, i) => (
-          <StatCard key={i} {...stat} />
+        {stats.map((stat, index) => (
+          <StatCard
+            key={index}
+            icon={stat.icon}
+            value={stat.value}
+            label={stat.label}
+            subtitle={stat.subtitle}
+            color={stat.color}
+          />
         ))}
       </div>
 
