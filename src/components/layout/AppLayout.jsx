@@ -6,9 +6,7 @@ import { useAuth } from "../../context/AuthContext";
 
 const getPageTitle = (pathname, user) => {
   const name =
-    user?.fullName?.split(" ")[0] ||
-    user?.name?.split(" ")[0] ||
-    "User";
+    user?.fullName?.split(" ")[0] || user?.name?.split(" ")[0] || "User";
   if (pathname.startsWith("/teacher")) {
     switch (pathname) {
       case "/teacher/dashboard":

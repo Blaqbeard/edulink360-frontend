@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import {
@@ -8,20 +8,30 @@ import {
   Bell,
   Settings,
   LogOut,
+  Briefcase,
+  FolderOpen,
 } from "lucide-react";
 import logoImage from "../../assets/images/logo.jpg";
+import LogoutModal from "../common/LogoutModal";
 
 const studentNavLinks = [
   { to: "/", label: "Dashboard", icon: LayoutDashboard },
   { to: "/messages", label: "Messages", icon: MessageSquare },
   { to: "/assignments", label: "Assignments", icon: FileText },
   { to: "/notifications", label: "Notifications", icon: Bell },
+  { to: "/portfolio", label: "Portfolio", icon: FolderOpen },
+  { to: "/career", label: "Career Guidance", icon: Briefcase },
 ];
 
 const teacherNavLinks = [
   { to: "/teacher/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { to: "/teacher/messages", label: "Messages", icon: MessageSquare },
   { to: "/teacher/notifications", label: "Notifications", icon: Bell },
+  {
+    to: "/teacher/upskilling",
+    label: "Professional Development",
+    icon: Briefcase,
+  },
 ];
 
 const NavItem = ({ to, icon: Icon, children }) => (
@@ -45,6 +55,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const inferredRole = location.pathname.startsWith("/teacher")
     ? "TEACHER"
@@ -55,9 +66,14 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
   const navLinks = role === "TEACHER" ? teacherNavLinks : studentNavLinks;
   const settingsPath = role === "TEACHER" ? "/teacher/settings" : "/settings";
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setShowLogoutModal(true);
+  };
+
+  const handleLogoutConfirm = () => {
     logout();
     navigate("/login");
+    setShowLogoutModal(false);
   };
 
   return (
@@ -91,7 +107,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
             Settings
           </NavItem>
           <button
-            onClick={handleLogout}
+            onClick={handleLogoutClick}
             className="flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white w-full"
           >
             <LogOut />
@@ -99,6 +115,13 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
           </button>
         </div>
       </aside>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={handleLogoutConfirm}
+      />
     </>
   );
 }

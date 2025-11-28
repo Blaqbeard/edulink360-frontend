@@ -14,6 +14,8 @@ import Profile from "../pages/Profile";
 import Settings from "../pages/Settings";
 import Assignments from "../pages/Assignments";
 import Notifications from "../pages/Notifications";
+import Portfolio from "../pages/Portfolio";
+import CareerGuidance from "../pages/CareerGuidance";
 import Login from "../pages/Login";
 import Signup from "../pages/Signup";
 
@@ -23,6 +25,8 @@ import TeacherMessages from "../pages/TeacherMessages";
 import TeacherProfile from "../pages/TeacherProfile";
 import TeacherSettings from "../pages/TeacherSettings";
 import TeacherNotifications from "../pages/TeacherNotifications";
+import TeacherAssignments from "../pages/TeacherAssignments";
+import Upskilling from "../pages/Upskilling";
 
 export default function AppRoutes() {
   return (
@@ -49,6 +53,8 @@ export default function AppRoutes() {
         <Route path="settings" element={<Settings />} />
         <Route path="assignments" element={<Assignments />} />
         <Route path="notifications" element={<Notifications />} />
+        <Route path="portfolio" element={<Portfolio />} />
+        <Route path="career" element={<CareerGuidance />} />
       </Route>
 
       {/* Student Messages use a custom layout */}
@@ -101,6 +107,22 @@ export default function AppRoutes() {
         element={
           <ProtectedRoute allowedRoles={["teacher"]}>
             <TeacherNotifications />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/assignments"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <TeacherAssignments />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/teacher/upskilling"
+        element={
+          <ProtectedRoute allowedRoles={["teacher"]}>
+            <Upskilling />
           </ProtectedRoute>
         }
       />

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { studentService } from "../services/studentService";
 import { useNotifications } from "../context/NotificationContext";
+import { submissionCache } from "../utils/submissionCache";
 
 const formatDate = (value) => {
   if (!value) return "No due date";
@@ -25,7 +26,10 @@ export default function Assignments() {
   const [feedback, setFeedback] = useState(null);
   const [error, setError] = useState(null);
   const [statusMessage, setStatusMessage] = useState(null);
-  const [locallySubmittedIds, setLocallySubmittedIds] = useState([]);
+  const [locallySubmittedIds, setLocallySubmittedIds] = useState(() => {
+    if (typeof window === "undefined") return [];
+    return submissionCache.getIds();
+  });
   const { refreshCount } = useNotifications();
 
   useEffect(() => {
@@ -48,6 +52,7 @@ export default function Assignments() {
         ? data
         : data?.data || [];
       setAssignments(list);
+      setLocallySubmittedIds(submissionCache.syncWithAssignments(list));
       if (!selectedAssignmentId && list.length > 0) {
         setSelectedAssignmentId(list[0].id);
       }
@@ -80,10 +85,13 @@ export default function Assignments() {
       await studentService.submitAssignment(selectedAssignment.id, selectedFile);
       setSelectedFile(null);
       refreshCount?.();
-      setLocallySubmittedIds((prev) =>
-        prev.includes(selectedAssignment.id)
-          ? prev
-          : [...prev, selectedAssignment.id]
+      submissionCache.addNotification({
+        assignmentId: selectedAssignment.id,
+        title: `${selectedAssignment.title || "Assignment"} submitted`,
+        message: `Your submission for "${selectedAssignment.title || "Untitled Assignment"}" has been sent.`,
+      });
+      setLocallySubmittedIds(
+        submissionCache.recordSubmission(selectedAssignment.id)
       );
       setAssignments((prev) =>
         prev.map((assignment) =>

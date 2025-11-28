@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { notificationService } from "../services/notificationService";
 import { useNotifications } from "../context/NotificationContext";
+import { submissionCache } from "../utils/submissionCache";
 
 const iconClasses = {
   submission: { icon: "bi-file-earmark-check", color: "bg-blue-100 text-blue-600" },
@@ -42,6 +43,13 @@ export default function Notifications() {
     return () => clearInterval(interval);
   }, []);
 
+  const mergeWithLocal = (remoteList = []) => {
+    const locals = submissionCache.pruneNotifications();
+    return [...locals, ...remoteList].sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+    );
+  };
+
   const fetchNotifications = async () => {
     try {
       setLoading(true);
@@ -51,7 +59,7 @@ export default function Notifications() {
         limit: 50,
         role,
       });
-      setNotifications(list);
+      setNotifications(mergeWithLocal(list));
       refreshCount?.();
     } catch (err) {
       setError(
@@ -66,12 +74,21 @@ export default function Notifications() {
 
   const handleMarkAsRead = async (notificationId) => {
     try {
-      await notificationService.markAsRead(notificationId, role);
-      setNotifications((prev) =>
-        prev.map((notif) =>
-          notif.id === notificationId ? { ...notif, read: true } : notif
-        )
-      );
+      if (notificationId.startsWith("local-")) {
+        submissionCache.markNotificationRead(notificationId);
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === notificationId ? { ...notif, read: true } : notif
+          )
+        );
+      } else {
+        await notificationService.markAsRead(notificationId, role);
+        setNotifications((prev) =>
+          prev.map((notif) =>
+            notif.id === notificationId ? { ...notif, read: true } : notif
+          )
+        );
+      }
       setStatusMessage("Notification marked as read.");
     } catch (err) {
       setStatusMessage(
@@ -83,6 +100,7 @@ export default function Notifications() {
   const handleMarkAll = async () => {
     try {
       await notificationService.markAllAsRead(role);
+      submissionCache.clearNotifications();
       setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
       setStatusMessage("All notifications marked as read.");
     } catch (err) {

@@ -58,6 +58,32 @@ export const teacherService = {
       throw error.response?.data || error.message;
     }
   },
+
+  /**
+   * GET /teacher/assignments/:id/submissions
+   * Get all submissions for a specific assignment
+   */
+  getAssignmentSubmissions: async (assignmentId) => {
+    try {
+      const { data } = await api.get(`/teacher/assignments/${assignmentId}/submissions`);
+      return data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
+
+  /**
+   * GET /teacher/submissions
+   * Get all submissions across all assignments
+   */
+  getAllSubmissions: async () => {
+    try {
+      const { data } = await api.get("/teacher/submissions");
+      return data;
+    } catch (error) {
+      throw error.response?.data || error.message;
+    }
+  },
 };
 
 export default teacherService;

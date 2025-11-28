@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import { Search, Star, MessageSquareText } from "lucide-react";
 
-const FilterTabs = () => {
-  const [activeTab, setActiveTab] = useState("Groups");
-  const tabs = ["Groups", "Students", "Favorites", "Unread"];
-
+const FilterTabs = ({ tabs = ["Groups", "Students", "Favorites", "Unread"], activeTab, onTabChange }) => {
   return (
     <div className="flex items-center space-x-2">
       {tabs.map((tab) => (
         <button
           key={tab}
-          onClick={() => setActiveTab(tab)}
+          onClick={() => onTabChange?.(tab)}
           className={`px-4 py-2 rounded-full text-sm font-semibold transition-colors ${
             activeTab === tab
               ? "bg-gray-800 text-white"
@@ -27,7 +24,7 @@ const FilterTabs = () => {
 const ConversationItem = ({ convo, isActive, onClick }) => (
   <button
     onClick={onClick}
-    className={`w-full text-left p-4 flex space-x-4 items-start border-b transition-colors hover:bg-gray-50 ${
+    className={`w-full text-left p-4 flex space-x-4 items-start border-b border-gray-200 transition-colors hover:bg-gray-50 ${
       isActive ? "bg-blue-50" : ""
     }`}
   >
@@ -51,11 +48,13 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
       </div>
 
       {/* Teacher/Sender Name */}
-      <div className="mb-2">
-        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-          {convo.sender}
-        </span>
-      </div>
+      {(convo.subtitle || convo.sender) && (
+        <div className="mb-2">
+          <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+            {convo.subtitle || convo.sender}
+          </span>
+        </div>
+      )}
 
       {/* Last Message Line with Icons */}
       <div className="flex justify-between items-center">
@@ -83,18 +82,36 @@ export default function ConversationsList({
   conversations,
   activeConversationId,
   onConversationSelect, // Use the new prop name
+  onNewMessage, // Optional: callback for "New Message" button
+  tabs, // Optional: custom tabs array
+  activeTab, // Optional: active tab state
+  onTabChange, // Optional: tab change handler
 }) {
   return (
     // 1. Add conditional classes to hide this component on mobile when a chat is active.
     <div
-      className={`w-full md:w-[360px] h-full border-r bg-white flex-col flex-shrink-0 ${
+      className={`w-full md:w-[360px] h-full border-r border-gray-200 bg-white flex-col flex-shrink-0 ${
         activeConversationId ? "hidden md:flex" : "flex"
       }`}
     >
       {/* Header Area */}
-      <div className="p-4 space-y-4 border-b">
-        <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
-        <FilterTabs />
+      <div className="p-4 space-y-4 border-b border-gray-200">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+          {onNewMessage && (
+            <button
+              onClick={onNewMessage}
+              className="px-3 py-1.5 bg-blue-600 text-white text-sm font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              New
+            </button>
+          )}
+        </div>
+        <FilterTabs 
+          tabs={tabs || ["Groups", "Students", "Favorites", "Unread"]}
+          activeTab={activeTab || "Groups"}
+          onTabChange={onTabChange}
+        />
         <div className="relative">
           <Search
             size={20}

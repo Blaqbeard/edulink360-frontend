@@ -34,6 +34,7 @@ function TeacherNotifications() {
   const getNotificationIcon = (type) => {
     const icons = {
       submission: "bi-file-earmark-check",
+      assignment_created: "bi-file-earmark-plus",
       message: "bi-chat-dots",
       feedback: "bi-chat-square-text",
       deadline: "bi-clock",
@@ -46,6 +47,7 @@ function TeacherNotifications() {
   const getNotificationColor = (type) => {
     const colors = {
       submission: "bg-blue-100 text-blue-600",
+      assignment_created: "bg-green-100 text-green-600",
       message: "bg-green-100 text-green-600",
       feedback: "bg-orange-100 text-orange-600",
       deadline: "bg-yellow-100 text-yellow-600",
@@ -55,40 +57,51 @@ function TeacherNotifications() {
     return colors[type] || "bg-gray-100 text-gray-600";
   };
 
-  const fetchNotifications = useCallback(async () => {
-    try {
-      setLoading(true);
-      const notificationList = await notificationService.getNotifications({
-        page: 1,
-        limit: 50,
-        role,
-      });
-      const formattedNotifications = notificationList.map((notif) => ({
-        id: notif.id,
-        type: notif.type,
-        title: notif.title,
-        message: notif.message,
-        time: formatTime(notif.createdAt),
-        unread: !notif.read,
-        icon: getNotificationIcon(notif.type),
-        color: getNotificationColor(notif.type),
-      }));
-      setNotifications(formattedNotifications);
-      setUnreadCount(formattedNotifications.filter((n) => n.unread).length);
-      refreshCount?.();
-    } catch (error) {
-      console.error("Error fetching notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [refreshCount, role]);
+  // Backend guide shows /notifications endpoint for both roles
+
+  const fetchNotifications = useCallback(
+    async (isBackgroundRefresh = false) => {
+      try {
+        // Only show loading on initial fetch, not background refreshes
+        if (!isBackgroundRefresh) {
+          setLoading(true);
+        }
+        // Backend guide shows /notifications endpoint for both roles
+        const notificationList = await notificationService.getNotifications({
+          page: 1,
+          limit: 50,
+          role,
+        });
+        const formattedNotifications = notificationList.map((notif) => ({
+          id: notif.id,
+          type: notif.type || "announcement",
+          title: notif.title || "Notification",
+          message: notif.message || "",
+          time: formatTime(notif.createdAt),
+          unread: !notif.read,
+          icon: getNotificationIcon(notif.type || "announcement"),
+          color: getNotificationColor(notif.type || "announcement"),
+        }));
+        setNotifications(formattedNotifications);
+        setUnreadCount(formattedNotifications.filter((n) => n.unread).length);
+        refreshCount?.();
+      } catch (error) {
+        console.error("Error fetching notifications:", error);
+      } finally {
+        if (!isBackgroundRefresh) {
+          setLoading(false);
+        }
+      }
+    },
+    [refreshCount, role]
+  );
 
   useEffect(() => {
-    fetchNotifications();
+    fetchNotifications(false);
   }, [fetchNotifications]);
 
   useEffect(() => {
-    const interval = setInterval(fetchNotifications, 20000);
+    const interval = setInterval(() => fetchNotifications(true), 20000);
     return () => clearInterval(interval);
   }, [fetchNotifications]);
 
@@ -140,7 +153,7 @@ function TeacherNotifications() {
 
       {/* Left Sidebar - Fixed */}
       <div
-        className={`fixed left-0 top-0 w-64 bg-[#283447] flex flex-col h-screen z-40 transition-transform duration-300 ${
+        className={`fixed left-0 top-0 w-64 bg-[#0b1633] flex flex-col h-screen z-40 transition-transform duration-300 ${
           showMobileSidebar
             ? "translate-x-0"
             : "-translate-x-full md:translate-x-0"

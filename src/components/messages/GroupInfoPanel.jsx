@@ -20,7 +20,7 @@ const InfoTabs = () => {
   ];
 
   return (
-    <div className="w-full border-b border-gray-100">
+    <div className="w-full border-b border-gray-200">
       <div className="flex items-center justify-around">
         {tabs.map((tab) => (
           <button
@@ -72,7 +72,7 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
 
   if (!conversation) {
     return (
-      <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l border-gray-100 lg:flex-shrink-0 flex flex-col">
+      <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:border-l-gray-200 lg:flex-shrink-0 flex flex-col">
         <button onClick={onClose} className="mb-4">
           <ArrowLeft />
         </button>
@@ -82,10 +82,10 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
-    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:flex-shrink-0 flex flex-col">
+    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:border-l-gray-200 lg:flex-shrink-0 flex flex-col">
       {/* UNIVERSAL HEADER WITH BACK ARROW */}
 
-      <div className="p-4 border-b flex items-center space-x-4 flex-shrink-0">
+      <div className="p-4 border-b border-gray-200 flex items-center space-x-4 flex-shrink-0">
         <button onClick={onClose} className="text-gray-600 hover:text-gray-900">
           <ArrowLeft size={24} />
         </button>
@@ -102,6 +102,9 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
           <h2 className="text-xl font-bold text-gray-900">
             {conversation.name}
           </h2>
+          {conversation.subtitle && (
+            <p className="text-sm text-gray-500">{conversation.subtitle}</p>
+          )}
           <p className="text-sm text-gray-500">
             {conversation.members.length} members
           </p>

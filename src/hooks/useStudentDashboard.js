@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import API from "../api/axios";
+import { studentService } from "../services/studentService";
 
 export default function useStudentDashboard() {
   const [dashboardStats, setDashboardStats] = useState(null);
@@ -15,16 +15,22 @@ export default function useStudentDashboard() {
       setLoading(true);
       setError(null);
       try {
-        const [summaryRes, assignmentsRes] = await Promise.all([
-          API.get("/student/dashboard-summary"),
-          API.get("/student/assignments"),
+        const [summary, assignmentsList] = await Promise.all([
+          studentService.getDashboardSummary().catch(() => null),
+          studentService.getAssignments().catch(() => []),
         ]);
 
         if (cancelled) return;
 
-        const summary = summaryRes?.data || null;
-        let assignments = Array.isArray(assignmentsRes?.data)
-          ? assignmentsRes.data
+        // Normalize summary data
+        const summaryData = summary?.data || summary || null;
+        // Normalize assignments data
+        let assignments = Array.isArray(assignmentsList)
+          ? assignmentsList
+          : Array.isArray(assignmentsList?.data)
+          ? assignmentsList.data
+          : Array.isArray(assignmentsList?.assignments)
+          ? assignmentsList.assignments
           : [];
 
         assignments = assignments
@@ -68,7 +74,7 @@ export default function useStudentDashboard() {
         );
 
         // take latest 3 for UI
-        setDashboardStats(summary);
+        setDashboardStats(summaryData);
         setRecentAssignments(assignments.slice(0, 3));
         setRecentFeedbacks(feedbacks.slice(0, 3));
       } catch (err) {

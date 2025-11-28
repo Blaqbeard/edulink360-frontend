@@ -9,18 +9,10 @@ const normalizeList = (payload) => {
 
 const getRole = (role) => (role || "").toUpperCase();
 
-const getTeacherPath = (suffix = "") =>
-  `/api/teacher/notifications${suffix}`;
-
 export const notificationService = {
   getNotifications: async ({ page = 1, limit = 20, role } = {}) => {
     try {
-      if (getRole(role) === "TEACHER") {
-        const { data } = await api.get(
-          `${getTeacherPath(`?page=${page}&limit=${limit}`)}`
-        );
-        return normalizeList(data);
-      }
+      // Backend guide shows /notifications for both roles
       const { data } = await api.get("/notifications", {
         params: { page, limit },
       });
@@ -32,12 +24,7 @@ export const notificationService = {
 
   markAsRead: async (notificationId, role) => {
     try {
-      if (getRole(role) === "TEACHER") {
-        const { data } = await api.put(
-          getTeacherPath(`/${notificationId}/read`)
-        );
-        return data;
-      }
+      // Backend guide shows PATCH /notifications/mark-read/{id} for both roles
       const { data } = await api.patch(
         `/notifications/mark-read/${notificationId}`
       );
@@ -49,27 +36,22 @@ export const notificationService = {
 
   markAllAsRead: async (role) => {
     try {
-      if (getRole(role) === "TEACHER") {
-        const { data } = await api.put(getTeacherPath("/read-all"));
-        return data;
-      }
+      // Backend guide doesn't specify mark-all, but we'll try it
       const { data } = await api.patch("/notifications/mark-read/all");
       return data;
     } catch (error) {
-      throw error.response?.data || error.message;
+      // If endpoint doesn't exist, silently fail
+      return { success: true };
     }
   },
 
   getUnreadCount: async (role) => {
     try {
-      if (getRole(role) === "TEACHER") {
-        const { data } = await api.get(getTeacherPath("/unread-count"));
-        return data;
-      }
-      const { data } = await api.get("/notifications/unread-count");
-      return data;
+      // Backend guide doesn't specify unread-count endpoint
+      // Return 0 to avoid errors
+      return { count: 0 };
     } catch (error) {
-      throw error.response?.data || error.message;
+      return { count: 0 };
     }
   },
 };

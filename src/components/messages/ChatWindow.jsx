@@ -13,7 +13,16 @@ import {
   Check,
 } from "lucide-react";
 
-const TextMessage = ({ msg, conversation }) => (
+const TextMessage = ({ msg, conversation }) => {
+  // Ensure sender is always a string
+  const senderName = typeof msg.sender === 'string' 
+    ? msg.sender 
+    : (typeof msg.sender === 'object' && msg.sender?.name) 
+      ? msg.sender.name 
+      : String(msg.sender || "User");
+  const senderInitial = senderName.charAt(0) || "U";
+  
+  return (
   <div
     className={`flex items-end gap-2 ${
       msg.isSender ? "justify-end" : "justify-start"
@@ -21,12 +30,12 @@ const TextMessage = ({ msg, conversation }) => (
   >
     {!msg.isSender && (
       <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-green-100 text-green-600 font-bold text-sm">
-        {msg.sender.charAt(0)}
+        {senderInitial}
       </div>
     )}
     <div className="max-w-md">
       {!msg.isSender && (
-        <p className="text-sm font-medium text-gray-700 mb-1">{msg.sender}</p>
+        <p className="text-sm font-medium text-gray-700 mb-1">{senderName}</p>
       )}
       <div
         className={`px-4 py-2 rounded-2xl ${
@@ -51,16 +60,25 @@ const TextMessage = ({ msg, conversation }) => (
       </div>
     )}
   </div>
-);
+  );
+};
 
 // Special feedback message card
-const FeedbackMessage = ({ msg }) => (
+const FeedbackMessage = ({ msg }) => {
+  const senderName = typeof msg.sender === 'string' 
+    ? msg.sender 
+    : (typeof msg.sender === 'object' && msg.sender?.name) 
+      ? msg.sender.name 
+      : String(msg.sender || "User");
+  const senderInitial = senderName.charAt(0) || "U";
+  
+  return (
   <div className="flex items-end gap-2">
     <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-green-100 text-green-600 font-bold text-sm">
-      {msg.sender.charAt(0)}
+      {senderInitial}
     </div>
     <div className="max-w-md w-full">
-      <p className="text-sm font-medium text-gray-700 mb-1">{msg.sender}</p>
+      <p className="text-sm font-medium text-gray-700 mb-1">{senderName}</p>
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 space-y-3">
         <p className="font-semibold text-yellow-800">Feedback</p>
         <div>
@@ -89,16 +107,25 @@ const FeedbackMessage = ({ msg }) => (
       <p className="text-xs mt-1 text-left text-gray-400">{msg.time}</p>
     </div>
   </div>
-);
+  );
+};
 
 // Audio message bubble
-const AudioMessage = ({ msg }) => (
+const AudioMessage = ({ msg }) => {
+  const senderName = typeof msg.sender === 'string' 
+    ? msg.sender 
+    : (typeof msg.sender === 'object' && msg.sender?.name) 
+      ? msg.sender.name 
+      : String(msg.sender || "User");
+  const senderInitial = senderName.charAt(0) || "U";
+  
+  return (
   <div className="flex items-end gap-2">
     <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold text-sm">
-      {msg.sender.charAt(0)}
+      {senderInitial}
     </div>
     <div className="max-w-md">
-      <p className="text-sm font-medium text-gray-700 mb-1">{msg.sender}</p>
+      <p className="text-sm font-medium text-gray-700 mb-1">{senderName}</p>
       <div className="bg-gray-100 rounded-full flex items-center px-4 py-2 space-x-3">
         <button className="text-gray-600">
           <Play size={20} />
@@ -112,7 +139,8 @@ const AudioMessage = ({ msg }) => (
       <p className="text-xs mt-1 text-left text-gray-400">{msg.time}</p>
     </div>
   </div>
-);
+  );
+};
 
 // Image grid message
 const ImageMessage = ({ msg, conversation }) => (
@@ -143,7 +171,16 @@ export default function ChatWindow({
   onHeaderClick,
   isPanelOpen,
   onBack, // 2. Accept the new 'onBack' prop
+  onSendMessage, // Accept onSendMessage prop
 }) {
+  const [messageInput, setMessageInput] = React.useState("");
+
+  const handleSend = (e) => {
+    e?.preventDefault();
+    if (!messageInput.trim() || !onSendMessage) return;
+    onSendMessage(messageInput.trim());
+    setMessageInput("");
+  };
   // If no conversation is selected, show a placeholder on desktop and nothing on mobile.
   if (!conversation) {
     return (
@@ -177,7 +214,7 @@ export default function ChatWindow({
       }`}
     >
       {/* Chat Header */}
-      <div className="flex items-center justify-between p-4 border-b w-full">
+      <div className="flex items-center justify-between p-4 border-b border-gray-200 w-full">
         <div className="flex items-center space-x-3">
           {/* 4. BACK ARROW FOR MOBILE */}
           <button onClick={onBack} className="md:hidden text-gray-600 mr-2">
@@ -196,20 +233,22 @@ export default function ChatWindow({
               <p className="font-bold text-lg text-gray-900">
                 {conversation.name}
               </p>
-              <p className="text-sm text-gray-500">{conversation.sender}</p>
+              <p className="text-sm text-gray-500">
+                {conversation.subtitle || conversation.sender}
+              </p>
             </div>
           </button>
         </div>
 
         {/* Header Icons */}
         <div className="flex items-center space-x-2 text-gray-500">
-          <div className="h-10 w-10 flex items-center justify-center border rounded-full hover:bg-gray-100">
+          <div className="h-10 w-10 flex items-center justify-center border border-gray-200 rounded-full hover:bg-gray-100">
             <Phone size={20} />
           </div>
-          <div className="h-10 w-10 flex items-center justify-center border rounded-full hover:bg-gray-100">
+          <div className="h-10 w-10 flex items-center justify-center border border-gray-200 rounded-full hover:bg-gray-100">
             <Video size={20} />
           </div>
-          <div className="h-10 w-10 flex items-center justify-center border rounded-full hover:bg-gray-100">
+          <div className="h-10 w-10 flex items-center justify-center border border-gray-200 rounded-full hover:bg-gray-100">
             <MoreVertical size={20} />
           </div>
         </div>
@@ -222,21 +261,37 @@ export default function ChatWindow({
         </div>
       </div>
 
-      {/* Message Input (unchanged) */}
-      <div className="p-4 bg-white border-t">
-        <div className="flex items-center space-x-4 bg-gray-100 border border-gray-100 rounded-lg px-4 py-2">
-          <button className="text-gray-500 hover:text-gray-700">
+      {/* Message Input */}
+      <div className="p-4 bg-white border-t border-gray-200">
+        <form
+          onSubmit={handleSend}
+          className="flex items-center space-x-4 bg-gray-100 rounded-lg px-4 py-2"
+        >
+          <button
+            type="button"
+            className="text-gray-500 hover:text-gray-700"
+            onClick={(e) => {
+              e.preventDefault();
+              // TODO: Handle file attachment
+            }}
+          >
             <Paperclip size={20} />
           </button>
           <input
             type="text"
+            value={messageInput}
+            onChange={(e) => setMessageInput(e.target.value)}
             placeholder="Send message or feedback..."
             className="flex-1 bg-transparent focus:outline-none"
           />
-          <button className="text-gray-500 hover:text-gray-700">
+          <button
+            type="submit"
+            disabled={!messageInput.trim()}
+            className="text-gray-500 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Send size={20} />
           </button>
-        </div>
+        </form>
       </div>
     </div>
   );

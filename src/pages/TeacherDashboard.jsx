@@ -4,6 +4,9 @@ import { useNotifications } from "../context/NotificationContext";
 import { dashboardService } from "../services/dashboardService";
 import { teacherService } from "../services/teacherService";
 import { authService } from "../services/authService";
+import { messageService } from "../services/messageService";
+import LogoutModal from "../components/common/LogoutModal";
+import LanguageSelector from "../components/common/LanguageSelector";
 
 const toNumberOrNull = (value) =>
   typeof value === "number" && !Number.isNaN(value) ? value : null;
@@ -28,8 +31,9 @@ const formatTimestamp = (value) => {
 function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { unreadCount } = useNotifications();
+  const { unreadCount, refreshCount } = useNotifications();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [dashboardData, setDashboardData] = useState({
     stats: null,
     recentSubmissions: [],
@@ -45,6 +49,8 @@ function TeacherDashboard() {
   });
   const [isCreatingAssignment, setIsCreatingAssignment] = useState(false);
   const [assignmentStatus, setAssignmentStatus] = useState(null);
+  const [selectedClass, setSelectedClass] = useState(null);
+  const [showStudentModal, setShowStudentModal] = useState(false);
   const user = authService.getCurrentUser();
 
   const isActive = (path) => location.pathname === path;
@@ -72,22 +78,31 @@ function TeacherDashboard() {
       const totalClasses =
         dashboardSummary?.totalClasses ?? classList.length ?? 0;
 
-      const stats = {
-        totalStudents: dashboardSummary?.totalStudents ?? 0,
-        pendingReviews:
-          dashboardSummary?.pendingReviews ??
-          dashboardSummary?.pendingAssignments ??
-          0,
-        progressRate: dashboardSummary?.progressRate ?? 0,
-        totalClasses,
-      };
-
+      // Declare completedClasses and inProgressClasses before using them
       const completedClasses = toNumberOrNull(
         dashboardSummary?.completedClasses
       );
       const inProgressClasses = toNumberOrNull(
         dashboardSummary?.inProgressClasses
       );
+
+      // Calculate actual progress rate from completed/total if not provided
+      const backendProgressRate = toNumberOrNull(dashboardSummary?.progressRate);
+      const calculatedProgressRate = 
+        completedClasses !== null && totalClasses > 0
+          ? Math.round((completedClasses / totalClasses) * 100)
+          : null;
+      const actualProgressRate = backendProgressRate ?? calculatedProgressRate ?? 0;
+
+      const stats = {
+        totalStudents: dashboardSummary?.totalStudents ?? 0,
+        pendingReviews:
+          dashboardSummary?.pendingReviews ??
+          dashboardSummary?.pendingAssignments ??
+          0,
+        progressRate: actualProgressRate,
+        totalClasses,
+      };
       const completionFromApi = toNumberOrNull(
         dashboardSummary?.completionPercentage ??
           dashboardSummary?.progressRate
@@ -105,18 +120,28 @@ function TeacherDashboard() {
         inProgressClasses !== null ||
         totalClasses > 0;
 
-      const classPerformance = hasPerformanceData
-        ? {
-            completionPercentage,
-            completed: completedClasses,
-            inProgress: inProgressClasses,
-            total: totalClasses || null,
-          }
-        : null;
+      // Always show performance data if we have any classes or students
+      // Use backend data or calculate from available data
+      const classPerformance = {
+        completionPercentage: completionPercentage ?? 0,
+        completed: completedClasses ?? 0,
+        inProgress: inProgressClasses ?? 0,
+        total: totalClasses ?? 0,
+      };
+
+      // Backend guide shows /teacher/dashboard-stats returns recentSubmissions: []
+      // Extract from dashboard summary as per backend guide
+      const recentSubmissions = Array.isArray(dashboardSummary?.recentSubmissions)
+        ? dashboardSummary.recentSubmissions
+        : Array.isArray(dashboardSummary?.submissions)
+        ? dashboardSummary.submissions
+        : Array.isArray(dashboardSummary?.data?.recentSubmissions)
+        ? dashboardSummary.data.recentSubmissions
+        : [];
 
       setDashboardData({
         stats,
-        recentSubmissions: dashboardSummary?.recentSubmissions ?? [],
+        recentSubmissions,
         classPerformance,
       });
     } catch (err) {
@@ -144,6 +169,21 @@ function TeacherDashboard() {
     }));
   };
 
+  const handleViewClass = (classData) => {
+    setSelectedClass(classData);
+    setShowStudentModal(true);
+  };
+
+  const handleMessageStudent = (studentId) => {
+    setShowStudentModal(false);
+    navigate(`/teacher/messages?student=${studentId}`);
+  };
+
+  const handleCloseModal = () => {
+    setShowStudentModal(false);
+    setSelectedClass(null);
+  };
+
   const handleCreateAssignment = async (e) => {
     e.preventDefault();
     setAssignmentStatus(null);
@@ -165,7 +205,13 @@ function TeacherDashboard() {
         return;
       }
 
-      await teacherService.createAssignment(payload);
+      const result = await teacherService.createAssignment(payload);
+      console.log("Assignment creation result:", result);
+      
+      // Backend guide doesn't specify assignment creation notifications
+      // The backend should handle notifications automatically
+      // No need for local notification cache
+      
       setAssignmentStatus({
         type: "success",
         message: "Assignment created successfully!",
@@ -175,6 +221,8 @@ function TeacherDashboard() {
         description: "",
         dueDate: "",
       });
+      // Refresh dashboard to show updated stats
+      fetchDashboardData();
     } catch (err) {
       setAssignmentStatus({
         type: "error",
@@ -321,6 +369,24 @@ function TeacherDashboard() {
             <span className="font-medium">Dashboard</span>
           </a>
 
+          {/* Assignments */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/assignments");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/assignments")
+                ? "bg-[#1A2332]"
+                : "hover:bg-[#1A2332] text-white/80"
+            }`}
+          >
+            <i className="bi bi-file-earmark-text text-xl"></i>
+            <span className="font-medium">Assignments</span>
+          </a>
+
           {/* Messages */}
           <a
             href="#"
@@ -356,6 +422,20 @@ function TeacherDashboard() {
             <i className="bi bi-bell text-xl"></i>
             <span className="font-medium">Notifications</span>
           </a>
+
+          {/* Professional Development */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/upskilling");
+              setShowMobileSidebar(false);
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-mortarboard text-xl"></i>
+            <span className="font-medium">Professional Development</span>
+          </a>
         </nav>
 
         {/* Bottom Navigation - Settings and Logout */}
@@ -379,8 +459,7 @@ function TeacherDashboard() {
             href="#"
             onClick={(e) => {
               e.preventDefault();
-              authService.logout();
-              navigate("/signup");
+              setShowLogoutModal(true);
             }}
             className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
@@ -402,6 +481,8 @@ function TeacherDashboard() {
               <p className="text-sm text-gray-500 mt-1">Teacher</p>
             </div>
             <div className="flex items-center gap-4">
+              {/* Language Selector */}
+              <LanguageSelector />
               {/* Notification Bell */}
               <div
                 onClick={() => navigate("/teacher/notifications")}
@@ -539,60 +620,47 @@ function TeacherDashboard() {
                   </div>
                 </div>
 
-                {performanceMetrics ? (
-                  <>
-                    <div className="mb-6">
-                      <div className="flex items-center gap-3 mb-2">
-                        <span className="text-white text-sm font-medium">
-                          Completed
-                        </span>
-                        <div className="flex-1 relative">
-                          <div className="w-full bg-blue-400 rounded-full h-3">
-                            <div
-                              className="bg-white rounded-full h-3 transition-all duration-500"
-                              style={{
-                                width: `${
-                                  completionPercentValue ?? 0
-                                }%`,
-                              }}
-                            ></div>
-                          </div>
-                        </div>
-                        <span className="text-white text-sm font-medium">
-                          {typeof completionPercentValue === "number"
-                            ? `${completionPercentValue}%`
-                            : "—"}
-                        </span>
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-white text-sm font-medium">
+                      Completed
+                    </span>
+                    <div className="flex-1 relative">
+                      <div className="w-full bg-blue-400 rounded-full h-3">
+                        <div
+                          className="bg-white rounded-full h-3 transition-all duration-500"
+                          style={{
+                            width: `${completionPercentValue ?? 0}%`,
+                          }}
+                        ></div>
                       </div>
                     </div>
-
-                    <div className="grid grid-cols-3 gap-4">
-                      <div>
-                        <p className="text-white text-2xl font-bold">
-                          {performanceMetrics.completed ?? "—"}
-                        </p>
-                        <p className="text-gray-400 text-sm">Completed</p>
-                      </div>
-                      <div>
-                        <p className="text-white text-2xl font-bold">
-                          {performanceMetrics.inProgress ?? "—"}
-                        </p>
-                        <p className="text-gray-400 text-sm">In Progress</p>
-                      </div>
-                      <div>
-                        <p className="text-white text-2xl font-bold">
-                          {performanceMetrics.total ?? "—"}
-                        </p>
-                        <p className="text-gray-400 text-sm">Total</p>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <div className="bg-white/10 border border-white/20 rounded-lg p-4 text-white">
-                    Performance analytics will appear once your classes start
-                    reporting progress.
+                    <span className="text-white text-sm font-medium">
+                      {completionPercentValue ?? 0}%
+                    </span>
                   </div>
-                )}
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {performanceMetrics?.completed ?? dashboardData.classPerformance?.completed ?? 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">Completed</p>
+                  </div>
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {performanceMetrics?.inProgress ?? dashboardData.classPerformance?.inProgress ?? 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">In Progress</p>
+                  </div>
+                  <div>
+                    <p className="text-white text-2xl font-bold">
+                      {performanceMetrics?.total ?? dashboardData.classPerformance?.total ?? 0}
+                    </p>
+                    <p className="text-gray-400 text-sm">Total</p>
+                  </div>
+                </div>
               </div>
 
               {/* Classes Overview */}
@@ -605,7 +673,47 @@ function TeacherDashboard() {
                     </p>
                   </div>
                   <button
-                    onClick={() => navigate("/teacher/messages")}
+                    onClick={async () => {
+                      // First, try to collect all students from all classes
+                      let allStudents = teacherClasses.flatMap((cls) =>
+                        (cls.students || []).map((student) => ({
+                          ...student,
+                          className: cls.name,
+                        }))
+                      );
+                      
+                      // If no students found in classes, fetch from contacts
+                      if (allStudents.length === 0) {
+                        try {
+                          const contacts = await messageService.getContacts();
+                          const studentList = Array.isArray(contacts)
+                            ? contacts.filter((c) => c.role?.toUpperCase() === "STUDENT")
+                            : Array.isArray(contacts?.students)
+                            ? contacts.students
+                            : [];
+                          
+                          allStudents = studentList.map((student) => ({
+                            id: student.id || student.userId,
+                            userId: student.id || student.userId,
+                            name: student.name || "Student",
+                            email: student.email,
+                            className: "All Classes",
+                          }));
+                        } catch (error) {
+                          console.error("Error fetching students from contacts:", error);
+                        }
+                      }
+                      
+                      if (allStudents.length > 0) {
+                        setSelectedClass({
+                          name: "All Students",
+                          students: allStudents,
+                        });
+                        setShowStudentModal(true);
+                      } else {
+                        alert("No students found. Please ensure students are registered and assigned to your classes.");
+                      }
+                    }}
                     className="px-4 py-2 bg-[#0b1633] text-white rounded-lg text-sm font-semibold hover:bg-[#1A2332] transition-all duration-200"
                   >
                     Contact Students
@@ -620,7 +728,8 @@ function TeacherDashboard() {
                     {teacherClasses.slice(0, 4).map((cls) => (
                       <div
                         key={cls.id}
-                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200"
+                        className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                        onClick={() => handleViewClass(cls)}
                       >
                         <div className="flex items-center justify-between mb-2">
                           <h3 className="text-lg font-semibold text-[#0b1633]">
@@ -633,6 +742,26 @@ function TeacherDashboard() {
                         <p className="text-sm text-gray-600 line-clamp-2">
                           {cls.description || "No description provided."}
                         </p>
+                        {cls.students && cls.students.length > 0 && (
+                          <div className="mt-3 pt-3 border-t border-gray-100">
+                            <p className="text-xs text-gray-500 mb-2">Students:</p>
+                            <div className="flex flex-wrap gap-2">
+                              {cls.students.slice(0, 3).map((student, idx) => (
+                                <span
+                                  key={student.id || idx}
+                                  className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded"
+                                >
+                                  {student.name || "Student"}
+                                </span>
+                              ))}
+                              {cls.students.length > 3 && (
+                                <span className="text-xs px-2 py-1 bg-gray-100 text-gray-700 rounded">
+                                  +{cls.students.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -657,7 +786,7 @@ function TeacherDashboard() {
                     Refresh
                   </button>
                 </div>
-                {dashboardData.recentSubmissions?.length ? (
+                {dashboardData.recentSubmissions?.length > 0 ? (
                   <div className="space-y-3">
                     {dashboardData.recentSubmissions
                       .slice(0, 6)
@@ -675,24 +804,34 @@ function TeacherDashboard() {
                           >
                             <div className="flex items-center gap-4">
                               <div className="w-12 h-12 rounded-full bg-blue-50 text-blue-600 font-semibold flex items-center justify-center">
-                                {(submission.studentName ||
-                                  submission.student ||
-                                  "ST")
-                                  .split(" ")
-                                  .map((n) => n[0])
-                                  .join("")
-                                  .toUpperCase()
-                                  .substring(0, 2)}
+                                {(() => {
+                                  const studentName =
+                                    submission.studentName ||
+                                    (typeof submission.student === "string"
+                                      ? submission.student
+                                      : submission.student?.name) ||
+                                    "ST";
+                                  return studentName
+                                    .split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .toUpperCase()
+                                    .substring(0, 2);
+                                })()}
                               </div>
                               <div>
                                 <p className="font-semibold text-gray-900">
                                   {submission.studentName ||
-                                    submission.student ||
+                                    (typeof submission.student === "string"
+                                      ? submission.student
+                                      : submission.student?.name) ||
                                     "Student"}
                                 </p>
                                 <p className="text-sm text-gray-500">
                                   {submission.assignmentTitle ||
-                                    submission.assignment ||
+                                    (typeof submission.assignment === "string"
+                                      ? submission.assignment
+                                      : submission.assignment?.title) ||
                                     "Assignment"}
                                 </p>
                               </div>
@@ -713,10 +852,40 @@ function TeacherDashboard() {
                       })}
                   </div>
                 ) : (
-                  <div className="py-8 text-center text-gray-500 border border-dashed border-gray-200 rounded-xl">
-                    No submissions yet.
+                  <div className="py-12 text-center border border-dashed border-gray-200 rounded-xl">
+                    <div className="flex flex-col items-center gap-2">
+                      <i className="bi bi-inbox text-4xl text-gray-300"></i>
+                      <p className="text-gray-500 font-medium">Coming Soon</p>
+                      <p className="text-sm text-gray-400">
+                        Recent submissions will appear here once students start submitting assignments.
+                      </p>
+                    </div>
                   </div>
                 )}
+              </div>
+
+              {/* Assignment Grading - Coming Soon */}
+              <div className="bg-white rounded-lg p-6 shadow-sm animate-[fadeInUp_0.6s_ease-out_0.47s_both]">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
+                  <div>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      Grade Assignments
+                    </h2>
+                    <p className="text-sm text-gray-500">
+                      Review and provide feedback on student submissions
+                    </p>
+                  </div>
+                </div>
+                <div className="py-12 text-center border border-dashed border-gray-200 rounded-xl">
+                  <div className="flex flex-col items-center gap-2">
+                    <i className="bi bi-clipboard-check text-4xl text-gray-300"></i>
+                    <p className="text-gray-500 font-medium">Coming Soon</p>
+                    <p className="text-sm text-gray-400 max-w-md">
+                      The assignment grading interface will be available in the next update. 
+                      You'll be able to view submissions, provide grades, and give feedback to students.
+                    </p>
+                  </div>
+                </div>
               </div>
 
               {/* Quick Assignment Creation */}
@@ -794,82 +963,107 @@ function TeacherDashboard() {
                   </button>
                 </form>
               </div>
+            </>
+          )}
 
-              {/* Recent Submissions */}
-              <div className="animate-[fadeInUp_0.6s_ease-out_0.5s_both]">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-bold text-gray-900">
-                    Recent Submissions
-                  </h2>
-                  <a
-                    href="#"
-                    className="text-[#00B4D8] text-sm font-medium hover:underline transition-all duration-200"
+          {/* Student Selection Modal */}
+          {showStudentModal && selectedClass && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[80vh] flex flex-col">
+                {/* Modal Header */}
+                <div className="flex items-center justify-between p-6 border-b">
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">
+                      {selectedClass.name || "Class"}
+                    </h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {selectedClass.students?.length || 0} students
+                    </p>
+                  </div>
+                  <button
+                    onClick={handleCloseModal}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
-                    View All →
-                  </a>
+                    <i className="bi bi-x-lg text-2xl"></i>
+                  </button>
                 </div>
 
-                <div className="space-y-3">
-                  {dashboardData.recentSubmissions.length === 0 ? (
-                    <div className="text-center py-8 text-gray-500">
-                      <p>No recent submissions</p>
-                    </div>
-                  ) : (
-                    dashboardData.recentSubmissions.map((submission, index) => {
-                      const initials =
-                        submission.studentName
-                          ?.split(" ")
-                          .map((n) => n[0])
-                          .join("")
-                          .toUpperCase()
-                          .substring(0, 2) || "ST";
-                      const statusColors = {
-                        pending: "bg-[#FF8A56]",
-                        submitted: "bg-[#283447]",
-                        reviewed: "bg-green-500",
-                      };
-                      return (
+                {/* Students List */}
+                <div className="flex-1 overflow-y-auto p-6">
+                  {selectedClass.students && selectedClass.students.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {selectedClass.students.map((student, idx) => (
                         <div
-                          key={submission.id || index}
-                          className="bg-gray-50 border-l-4 border-l-[#0857bf] rounded-lg p-4 flex items-center justify-between hover:shadow-md transition-all duration-300 hover:translate-x-1"
+                          key={student.id || idx}
+                          className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
                         >
-                          <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 bg-[#FF8A56] rounded-full flex items-center justify-center shrink-0">
-                              <span className="text-white font-bold text-sm">
-                                {initials}
-                              </span>
+                          <div className="flex items-center gap-3 mb-3">
+                            <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-600 font-semibold flex items-center justify-center">
+                              {(student.name || "S")
+                                .split(" ")
+                                .map((n) => n[0])
+                                .join("")
+                                .toUpperCase()
+                                .substring(0, 2)}
                             </div>
-                            <div>
-                              <h3 className="font-semibold text-gray-900">
-                                {submission.studentName || "Student"}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                {submission.subject ||
-                                  submission.assignmentName}
+                            <div className="flex-1">
+                              <p className="font-semibold text-gray-900">
+                                {student.name || "Student"}
                               </p>
-                              <p className="text-xs text-gray-400 mt-1">
-                                {submission.dueDate || submission.submittedAt}
-                              </p>
+                              {student.email && (
+                                <p className="text-sm text-gray-500">{student.email}</p>
+                              )}
+                              {student.className && (
+                                <p className="text-xs text-gray-400 mt-1">
+                                  <i className="bi bi-book mr-1"></i>
+                                  {student.className}
+                                </p>
+                              )}
                             </div>
                           </div>
-                          <span
-                            className={`px-3 py-1.5 ${
-                              statusColors[submission.status?.toLowerCase()] ||
-                              statusColors.pending
-                            } text-white text-xs font-medium rounded`}
+                          <button
+                            onClick={() => handleMessageStudent(student.id || student.userId || idx)}
+                            className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
                           >
-                            {submission.status || "Pending"}
-                          </span>
+                            <i className="bi bi-chat-dots mr-2"></i>
+                            Send Message
+                          </button>
                         </div>
-                      );
-                    })
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12 text-gray-500">
+                      <i className="bi bi-person-x text-4xl mb-3 block"></i>
+                      <p>No students in this class yet.</p>
+                    </div>
                   )}
                 </div>
+
+                {/* Modal Footer */}
+                <div className="p-6 border-t bg-gray-50">
+                  <button
+                    onClick={handleCloseModal}
+                    className="w-full px-4 py-2 bg-gray-200 text-gray-700 rounded-lg font-semibold hover:bg-gray-300 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
               </div>
-            </>
+            </div>
           )}
         </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      <LogoutModal
+        isOpen={showLogoutModal}
+        onClose={() => setShowLogoutModal(false)}
+        onConfirm={() => {
+          authService.logout();
+          navigate("/signup");
+          setShowLogoutModal(false);
+        }}
+      />
     </div>
   );
 }

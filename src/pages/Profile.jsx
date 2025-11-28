@@ -13,6 +13,7 @@ import Card from "../components/common/Card";
 import Input from "../components/common/Input";
 import Button from "../components/common/Button";
 import StatCard from "../components/common/StatCard";
+import CourseClassSelector from "../components/Student/CourseClassSelector";
 import { studentService } from "../services/studentService";
 
 const getInitials = (name = "") =>
@@ -50,6 +51,12 @@ const normalizeProfile = (profile = {}) => {
     className,
     initials: getInitials(fullName),
     avatarUrl: profile.avatarUrl || profile.photoUrl || profile.profilePhoto || "",
+    courses: Array.isArray(profile.courses)
+      ? profile.courses.filter(Boolean)
+      : [],
+    classes: Array.isArray(profile.classes)
+      ? profile.classes.filter(Boolean)
+      : [],
   };
 };
 
@@ -172,6 +179,21 @@ export default function Profile() {
   };
 
   const progressStats = buildProgressStats(dashboardSummary);
+  const renderChipList = (items = [], emptyLabel = "Not selected") =>
+    items && items.length ? (
+      <div className="flex flex-wrap gap-2">
+        {items.map((item) => (
+          <span
+            key={item}
+            className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+          >
+            {item}
+          </span>
+        ))}
+      </div>
+    ) : (
+      <p className="text-sm text-gray-500">{emptyLabel}</p>
+    );
   const classTeacher =
     dashboardSummary?.classTeacher ||
     dashboardSummary?.advisor ||
@@ -242,6 +264,17 @@ export default function Profile() {
             {userData.className || "Class info coming soon"} - Student ID:{" "}
             {userData.studentId || "N/A"}
           </p>
+          {(userData.courses?.length > 0 || userData.classes?.length > 0) && (
+            <p className="text-sm text-gray-600 mt-1">
+              {userData.courses?.length > 0 && (
+                <span>Courses: {userData.courses.join(", ")}</span>
+              )}
+              {userData.courses?.length > 0 && userData.classes?.length > 0 && " • "}
+              {userData.classes?.length > 0 && (
+                <span>Classes: {userData.classes.join(", ")}</span>
+              )}
+            </p>
+          )}
         </div>
         <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-6">
           <div className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
@@ -338,6 +371,30 @@ export default function Profile() {
             </Button>
           </div>
         )}
+      </Card>
+
+      {/* Course and Class Level Selection */}
+      <CourseClassSelector />
+
+      {/* Display selected courses/classes */}
+      <Card>
+        <h3 className="text-lg font-semibold mb-4">Your Courses & Classes</h3>
+        <div className="space-y-4">
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-1">Courses</p>
+            {renderChipList(
+              userData.courses,
+              "Select your courses to populate this list."
+            )}
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-700 mb-1">Classes</p>
+            {renderChipList(
+              userData.classes,
+              "Select your classes to populate this list."
+            )}
+          </div>
+        </div>
       </Card>
 
       <div>

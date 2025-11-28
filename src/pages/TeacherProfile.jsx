@@ -5,6 +5,10 @@ import { dashboardService } from "../services/dashboardService";
 import { messageService } from "../services/messageService";
 import { useNotifications } from "../context/NotificationContext";
 import { authService } from "../services/authService";
+import SubjectSelector from "../components/Teacher/SubjectSelector";
+
+const formatList = (list) =>
+  Array.isArray(list) && list.length ? list.filter(Boolean) : [];
 
 function TeacherProfile() {
   const navigate = useNavigate();
@@ -17,6 +21,7 @@ function TeacherProfile() {
   const [recentMessages, setRecentMessages] = useState([]);
   const { unreadCount } = useNotifications();
   const user = authService.getCurrentUser();
+  const managedCourses = formatList(profile?.managedCourses);
 
   const isActive = (path) => location.pathname === path;
 
@@ -30,10 +35,21 @@ function TeacherProfile() {
     try {
       setLoading(true);
       const response = await profileService.getProfile();
-      setProfile(response.data);
+      // Handle different response structures
+      const profileData = response?.data || response || {};
+      setProfile(profileData);
     } catch (error) {
       console.error("Error fetching profile:", error);
-      // Keep default values for MVP
+      // Fallback to user data from auth if profile fetch fails
+      if (user) {
+        setProfile({
+          name: user.name,
+          email: user.email,
+          teacherId: user.id,
+          subject: user.subject || "",
+          managedCourses: user.managedCourses || [],
+        });
+      }
     } finally {
       setLoading(false);
     }
@@ -410,9 +426,9 @@ function TeacherProfile() {
                 <h3 className="text-2xl font-bold text-black">
                   {loading
                     ? "Loading..."
-                    : profile?.name || "No name available"}
+                    : profile?.name || user?.name || "No name available"}
                 </h3>
-                {profile?.name && (
+                {(profile?.name || user?.name) && (
                   <i
                     className="bi bi-pencil text-gray-500 cursor-pointer hover:text-[#00B4D8] transition-colors"
                     onClick={() => handleEditClick("name")}
@@ -425,11 +441,19 @@ function TeacherProfile() {
               <p className="text-black mb-1">
                 {loading
                   ? "Loading..."
-                  : profile?.subject || "No subject available"}
+                  : profile?.subject || user?.subject || "No subject available"}
+              </p>
+              <p className="text-sm text-black">
+                Managed Courses:{" "}
+                {managedCourses.length
+                  ? managedCourses.join(", ")
+                  : "No courses selected"}
               </p>
               <p className="text-sm text-black">
                 Teacher ID:{" "}
-                {loading ? "Loading..." : profile?.teacherId || "N/A"}
+                {loading
+                  ? "Loading..."
+                  : profile?.teacherId || profile?.id || user?.id || "N/A"}
               </p>
             </div>
 
@@ -505,6 +529,34 @@ function TeacherProfile() {
               >
                 Coming soon: Edit office hours
               </button>
+            </div>
+
+            {/* Subject Selection Section */}
+            <div className="mt-8 animate-[fadeInUp_0.6s_ease-out_0.35s_both]">
+              <SubjectSelector onUpdate={() => fetchProfile()} />
+            </div>
+
+            {/* Managed Courses Overview */}
+            <div className="mt-6">
+              <h3 className="text-lg font-semibold text-black mb-2">
+                Your Courses
+              </h3>
+              {managedCourses.length ? (
+                <div className="flex flex-wrap gap-2">
+                  {managedCourses.map((course) => (
+                    <span
+                      key={course}
+                      className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-medium"
+                    >
+                      {course}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-600">
+                  Select the courses you manage to keep this list up to date.
+                </p>
+              )}
             </div>
           </div>
 

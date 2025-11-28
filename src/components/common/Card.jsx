@@ -6,8 +6,11 @@ import React from "react";
  * @param {string} [props.className]
  */
 export default function Card({ children, className = "" }) {
+  const hasCustomBackground = /\bbg-/.test(className);
+  const baseBackground = hasCustomBackground ? "" : "bg-white";
+
   return (
-    <div className={`bg-white rounded-xl shadow-sm p-6 ${className}`}>
+    <div className={`${baseBackground} rounded-xl shadow-sm p-6 ${className}`}>
       {children}
     </div>
   );

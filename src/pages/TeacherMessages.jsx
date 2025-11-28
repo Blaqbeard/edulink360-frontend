@@ -1,12 +1,16 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { messageService } from "../services/messageService";
+import { authService } from "../services/authService";
 
 function TeacherMessages() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
 
   const isActive = (path) => location.pathname === path;
+
+  // State declarations - must be before useEffect hooks that use them
   const [activeTab, setActiveTab] = useState("groups");
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [detailsTab, setDetailsTab] = useState("overview");
@@ -24,6 +28,320 @@ function TeacherMessages() {
   const [loading, setLoading] = useState(false);
   const [sendingMessage, setSendingMessage] = useState(false);
   const [newMessage, setNewMessage] = useState("");
+  const [allStudents, setAllStudents] = useState([]); // All students for members panel
+
+  const metadataRefreshInProgress = useRef(false);
+  const lastMessageKeysRef = useRef({});
+
+  const formatList = (value) => {
+    if (Array.isArray(value)) {
+      return value.filter(Boolean).join(", ");
+    }
+    return typeof value === "string" ? value : "";
+  };
+
+  const getStudentSubtitle = (student = {}) => {
+    const courses = formatList(student.courses || student.subjects);
+    const classes = formatList(
+      student.classes ||
+        student.classLevels ||
+        student.className ||
+        student.class
+    );
+    const fallback = student.program || student.track || student.subject;
+    const parts = [courses, classes].filter(Boolean);
+    if (!parts.length && fallback) {
+      parts.push(fallback);
+    }
+    return parts.join(" • ");
+  };
+
+  const mapStudentConversation = (student) => {
+    const subtitle = getStudentSubtitle(student);
+    return {
+      id: student.id || student.userId,
+      userId: student.id || student.userId,
+      name: student.name || "Student",
+      email: student.email,
+      lastMessage: "",
+      unread: 0,
+      time: "",
+      isFavorite: false,
+      subject: subtitle,
+      courses:
+        Array.isArray(student.courses) || Array.isArray(student.subjects)
+          ? student.courses || student.subjects
+          : [],
+      classes: Array.isArray(student.classes) ? student.classes : [],
+    };
+  };
+
+  const getMessageKey = (msg) => {
+    if (!msg) return "";
+    return (
+      msg.id ||
+      msg.messageId ||
+      `${msg.sender || "user"}-${msg.text || ""}-${
+        msg.createdAt || msg.time || msg.timestamp || ""
+      }`
+    );
+  };
+
+  const findConversationById = (conversationId) => {
+    const pools = [groups, favorites, students, unreadConversations];
+    for (const list of pools) {
+      const found = list.find(
+        (conv) => conv.id === conversationId || conv.userId === conversationId
+      );
+      if (found) return found;
+    }
+    return null;
+  };
+
+  const updateConversationEntry = (conversationId, updater) => {
+    if (!conversationId || typeof updater !== "function") return;
+    const applyUpdates = (list = []) =>
+      list.map((conv) =>
+        conv.id === conversationId || conv.userId === conversationId
+          ? updater(conv)
+          : conv
+      );
+    setGroups((prev) => applyUpdates(prev));
+    setFavorites((prev) => applyUpdates(prev));
+    setStudents((prev) => applyUpdates(prev));
+  };
+
+  const syncUnreadList = (
+    conversationId,
+    unreadCount,
+    lastMessageText,
+    lastMessageTime,
+    fallbackName = "Conversation"
+  ) => {
+    const fallbackConv =
+      findConversationById(conversationId) || {
+        id: conversationId,
+        name: fallbackName,
+        lastMessage: lastMessageText,
+        time: lastMessageTime,
+      };
+
+    setUnreadConversations((prev) => {
+      const exists = prev.find(
+        (conv) => conv.id === conversationId || conv.userId === conversationId
+      );
+      if (unreadCount > 0) {
+        if (exists) {
+          return prev.map((conv) =>
+            conv.id === conversationId || conv.userId === conversationId
+              ? {
+                  ...conv,
+                  unread: unreadCount,
+                  lastMessage: lastMessageText,
+                  time: lastMessageTime,
+                }
+              : conv
+          );
+        }
+        return [
+          ...prev,
+          {
+            ...fallbackConv,
+            unread: unreadCount,
+            lastMessage: lastMessageText,
+            time: lastMessageTime,
+          },
+        ];
+      }
+      if (!exists) return prev;
+      return prev.filter(
+        (conv) =>
+          conv.id !== conversationId && conv.userId !== conversationId
+      );
+    });
+  };
+
+  const applyStudentMetadataPreview = (
+    studentId,
+    normalizedPreview,
+    rawMessage,
+    fallbackName = "Student",
+    subtitleOverride = ""
+  ) => {
+    if (!studentId || !normalizedPreview) return;
+    const currentEntry = findConversationById(studentId);
+    const baseUnread = currentEntry?.unread || 0;
+    const isActiveConversation = selectedConversation === studentId;
+    const messageKey = getMessageKey({
+      id: rawMessage.id || rawMessage.messageId,
+      sender: normalizedPreview.senderName || normalizedPreview.sender,
+      text: normalizedPreview.text || rawMessage.content || "",
+      createdAt: rawMessage.createdAt || rawMessage.timestamp || rawMessage.time,
+    });
+    const previousKey = lastMessageKeysRef.current[studentId];
+    const shouldIncrementUnread =
+      messageKey &&
+      previousKey &&
+      previousKey !== messageKey &&
+      normalizedPreview.sender === "student" &&
+      !isActiveConversation;
+    const nextUnread = isActiveConversation
+      ? 0
+      : shouldIncrementUnread
+      ? baseUnread + 1
+      : baseUnread;
+
+    updateConversationEntry(studentId, (conv) => {
+      if (!conv) return conv;
+      return {
+        ...conv,
+        lastMessage: normalizedPreview.text || conv.lastMessage || "",
+        time:
+          normalizedPreview.time ||
+          conv.time ||
+          formatTime(
+            rawMessage.createdAt ||
+              rawMessage.timestamp ||
+              rawMessage.time ||
+              new Date()
+          ),
+        subject: subtitleOverride || conv?.subject || "",
+        unread: nextUnread,
+      };
+    });
+
+    syncUnreadList(
+      studentId,
+      nextUnread,
+      normalizedPreview.text || "",
+      normalizedPreview.time ||
+        formatTime(
+          rawMessage.createdAt ||
+            rawMessage.timestamp ||
+            rawMessage.time ||
+            new Date()
+        ),
+      fallbackName
+    );
+
+    if (messageKey) {
+      lastMessageKeysRef.current[studentId] = messageKey;
+    }
+  };
+
+  const hydrateStudentMetadata = async () => {
+    if (!students.length || metadataRefreshInProgress.current) return;
+    metadataRefreshInProgress.current = true;
+    try {
+      const studentRecords = students
+        .map((student) => ({
+          id: student.id || student.userId,
+          name: student.name || "Student",
+          courses: student.courses || student.managedCourses,
+          classes: student.classes,
+          subject: student.subject,
+        }))
+        .filter((record) => Boolean(record.id));
+
+      if (!studentRecords.length) return;
+
+      const prioritized = [];
+      const seen = new Set();
+      const addRecord = (record) => {
+        const key = String(record.id);
+        if (seen.has(key)) return;
+        prioritized.push(record);
+        seen.add(key);
+      };
+
+      const activeStudent = studentRecords.find(
+        (record) => record.id === selectedConversation
+      );
+      if (activeStudent) {
+        addRecord(activeStudent);
+      }
+
+      studentRecords.forEach(addRecord);
+
+      const batch = prioritized.slice(0, 8);
+      if (!batch.length) return;
+
+      const currentUser = authService.getCurrentUser();
+      const currentUserId = currentUser?.id;
+      const currentUserRole = currentUser?.role;
+      const currentUserName = currentUser?.name || "Teacher";
+
+      const results = await Promise.allSettled(
+        batch.map(async (record) => {
+          const history = await messageService.getChatHistory(
+            record.id,
+            "teacher"
+          );
+          return {
+            record,
+            history: Array.isArray(history) ? history : [],
+          };
+        })
+      );
+
+      results.forEach((result) => {
+        if (result.status === "fulfilled") {
+          const { record, history } = result.value;
+          const latest =
+            Array.isArray(history) && history.length
+              ? history[history.length - 1]
+              : null;
+          if (latest) {
+            const normalized = normalizeMessage(
+              latest,
+              currentUserId,
+              currentUserRole,
+              currentUserName,
+              record.id
+            );
+            applyStudentMetadataPreview(
+              record.id,
+              normalized,
+              latest,
+              record.name,
+              getStudentSubtitle(record)
+            );
+          }
+        } else {
+          console.error("Student metadata refresh failed:", result.reason);
+        }
+      });
+    } catch (error) {
+      console.error("Error hydrating student metadata:", error);
+    } finally {
+      metadataRefreshInProgress.current = false;
+    }
+  };
+
+  // Check if student ID is in URL params (from dashboard)
+  useEffect(() => {
+    const studentId = searchParams.get("student");
+    if (studentId && activeTab === "students" && students.length > 0) {
+      // Find and select the student
+      const studentConv = students.find(
+        (s) => s.id === studentId || s.userId === studentId
+      );
+      if (
+        studentConv &&
+        selectedConversation !== (studentConv.id || studentId)
+      ) {
+        setSelectedConversation(studentConv.id || studentId);
+      }
+    }
+  }, [searchParams, activeTab, students, selectedConversation]);
+
+  // Handle initial student selection from URL
+  useEffect(() => {
+    const studentId = searchParams.get("student");
+    if (studentId) {
+      setActiveTab("students");
+    }
+  }, [searchParams]);
 
   // Format time helper
   const formatTime = (dateString) => {
@@ -38,6 +356,47 @@ function TeacherMessages() {
     return date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   };
 
+  // Helper to extract initials from name
+  const extractInitials = (name) => {
+    if (!name) return "U";
+    const parts = name.trim().split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.substring(0, 2).toUpperCase();
+  };
+
+  // Fetch all students for members panel on mount (includes Professional Development link via sidebar)
+  useEffect(() => {
+    const fetchAllStudents = async () => {
+      try {
+        const contacts = await messageService.getContacts();
+        const studentList = Array.isArray(contacts)
+          ? contacts.filter((c) => c.role?.toUpperCase() === "STUDENT")
+          : Array.isArray(contacts?.students)
+          ? contacts.students
+          : [];
+
+        // Format students with status
+        const formattedStudents = studentList.map((student) => ({
+          id: student.id || student.userId,
+          name: student.name || "Student",
+          initial: extractInitials(student.name || "S"),
+          displayInitial: extractInitials(student.name || "S").substring(0, 1),
+          status: student.status || "offline", // Default to offline if status not available
+          email: student.email,
+        }));
+
+        setAllStudents(formattedStudents);
+      } catch (error) {
+        console.error("Error fetching all students:", error);
+        setAllStudents([]);
+      }
+    };
+
+    fetchAllStudents();
+  }, []);
+
   // Fetch conversations based on active tab
   useEffect(() => {
     fetchConversations();
@@ -50,7 +409,29 @@ function TeacherMessages() {
       fetchConversationDetails(selectedConversation);
       markConversationAsRead(selectedConversation);
     }
-  }, [selectedConversation]);
+  }, [selectedConversation, activeTab]);
+
+  // Real-time message polling - check for new messages every 15 seconds (optimized)
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    // Poll for new messages every 15 seconds (reduced frequency to avoid excessive API calls)
+    const pollInterval = setInterval(() => {
+      fetchMessages(selectedConversation, true); // Force refresh
+    }, 15000); // Increased from 5 seconds to 15 seconds
+
+    // Cleanup interval on unmount or conversation change
+    return () => clearInterval(pollInterval);
+  }, [selectedConversation, activeTab]);
+
+  useEffect(() => {
+    if (!students.length) return;
+    hydrateStudentMetadata();
+    const interval = setInterval(() => {
+      hydrateStudentMetadata();
+    }, 20000);
+    return () => clearInterval(interval);
+  }, [students, selectedConversation]);
 
   const fetchConversations = async () => {
     try {
@@ -63,37 +444,270 @@ function TeacherMessages() {
           : activeTab === "students"
           ? "students"
           : "unread";
-      const response = await messageService.getConversations(type);
 
-      if (type === "groups") {
-        setGroups(response.data?.groups || []);
-      } else if (type === "favorites") {
-        setFavorites(response.data?.favorites || []);
-      } else if (type === "students") {
-        setStudents(response.data?.students || []);
+      // For students tab, fetch from /messages/contacts and filter for students
+      if (type === "students") {
+        try {
+          const contacts = await messageService.getContacts();
+          const studentList = Array.isArray(contacts)
+            ? contacts.filter((c) => c.role?.toUpperCase() === "STUDENT")
+            : Array.isArray(contacts?.students)
+            ? contacts.students
+            : [];
+
+          // Format as conversation list for display
+          const formattedStudents = studentList.map((student) =>
+            mapStudentConversation(student)
+          );
+          setStudents(formattedStudents);
+        } catch (contactError) {
+          console.error("Error fetching students from contacts:", contactError);
+          // Fallback to old method
+          const response = await messageService.getConversations(
+            type,
+            "teacher"
+          );
+          const fallbackStudents = Array.isArray(response.data?.students)
+            ? response.data.students.map((student) =>
+                mapStudentConversation(student)
+              )
+            : [];
+          setStudents(fallbackStudents);
+        }
       } else {
-        setUnreadConversations(response.data?.unread || []);
+        const response = await messageService.getConversations(type, "teacher");
+
+        if (type === "groups") {
+          setGroups(response.data?.groups || []);
+        } else if (type === "favorites") {
+          setFavorites(response.data?.favorites || []);
+        } else {
+          setUnreadConversations(response.data?.unread || []);
+        }
       }
     } catch (error) {
       console.error("Error fetching conversations:", error);
-      // Keep sample data as fallback for MVP
+      // No fallback - ensure backend integration is working
+      if (type === "students") {
+        setStudents([]);
+      } else if (type === "groups") {
+        setGroups([]);
+      } else if (type === "favorites") {
+        setFavorites([]);
+      } else {
+        setUnreadConversations([]);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchMessages = async (conversationId) => {
+  // Helper to normalize message from backend to render format
+  const normalizeMessage = (
+    msg,
+    currentUserId,
+    currentUserRole,
+    currentUserName,
+    conversationUserId = null
+  ) => {
+    // Determine sender role - check both role string and ID comparison
+    const senderRole = (msg.senderRole || msg.role || "").toUpperCase();
+    const senderId = msg.senderId || msg.sender?.id || msg.userId;
+    const receiverId = msg.receiverId || msg.toUserId || msg.toId;
+
+    // Determine if message is from current user (teacher) using multiple fallbacks
+    let isFromTeacher;
+
+    if (typeof msg.isSender === "boolean") {
+      isFromTeacher = msg.isSender;
+    } else if (msg.sentByCurrentUser === true) {
+      isFromTeacher = true;
+    }
+
+    if (isFromTeacher === undefined) {
+      if (senderRole === "TEACHER") {
+        isFromTeacher = true;
+      } else if (senderRole === "STUDENT") {
+        isFromTeacher = false;
+      }
+    }
+
+    if (isFromTeacher === undefined && senderId && currentUserId) {
+      if (String(senderId) === String(currentUserId)) {
+        isFromTeacher = true;
+      } else if (
+        conversationUserId &&
+        String(senderId) === String(conversationUserId)
+      ) {
+        isFromTeacher = false;
+      }
+    }
+
+    if (isFromTeacher === undefined && receiverId) {
+      if (currentUserId && String(receiverId) === String(currentUserId)) {
+        // Message addressed to teacher → from student
+        isFromTeacher = false;
+      } else if (
+        conversationUserId &&
+        String(receiverId) === String(conversationUserId)
+      ) {
+        // Message addressed to student → from teacher
+        isFromTeacher = true;
+      }
+    }
+
+    if (
+      isFromTeacher === undefined &&
+      senderId &&
+      String(senderId) === "1" &&
+      currentUserId &&
+      String(currentUserId) !== "1"
+    ) {
+      // Backend occasionally returns senderId 1 for system/teacher messages
+      isFromTeacher = true;
+    }
+
+    if (isFromTeacher === undefined) {
+      // Last resort: assume teacher to avoid showing teacher messages on the right
+      isFromTeacher = true;
+    }
+
+    // Get sender name - if from teacher, ALWAYS use current user's name; otherwise use backend response
+    let senderName;
+    if (isFromTeacher && currentUserName) {
+      senderName = currentUserName;
+    } else {
+      senderName = msg.senderName || msg.sender?.name || msg.name || "User";
+    }
+
+    return {
+      id: msg.id || msg.messageId || `msg-${Date.now()}-${Math.random()}`,
+      sender: isFromTeacher ? "teacher" : "student",
+      text: msg.content || msg.text || msg.message || "",
+      senderInitial: extractInitials(senderName),
+      senderName: senderName,
+      time: formatTime(msg.createdAt || msg.timestamp || msg.time || msg.date),
+      type: msg.type || "text",
+      createdAt: msg.createdAt || msg.timestamp || msg.time,
+    };
+  };
+
+  const fetchMessages = async (conversationId, forceRefresh = false) => {
     try {
-      if (messages[conversationId]) return; // Already loaded
-      const response = await messageService.getMessages(conversationId);
+      if (!forceRefresh && messages[conversationId]) return; // Already loaded
+
+      const currentUser = authService.getCurrentUser();
+      const currentUserId = currentUser?.id;
+      const currentUserRole = currentUser?.role;
+      const currentUserName = currentUser?.name || "Teacher";
+
+      // If this is a student conversation (from students tab), use getChatHistory
+      const isStudentConversation = activeTab === "students";
+      let messageList = [];
+
+      if (isStudentConversation) {
+        // Use getChatHistory for student conversations
+        messageList = await messageService.getChatHistory(
+          conversationId,
+          "teacher"
+        );
+      } else {
+        // Use legacy getMessages for groups/favorites
+        const response = await messageService.getMessages(
+          conversationId,
+          1,
+          50,
+          "teacher"
+        );
+        messageList = Array.isArray(response)
+          ? response
+          : Array.isArray(response?.messages)
+          ? response.messages
+          : Array.isArray(response?.data?.messages)
+          ? response.data.messages
+          : [];
+      }
+
+      const participantId = isStudentConversation ? conversationId : null;
+      const previousMessages = messages[conversationId] || [];
+      const previousKeys = new Set(
+        previousMessages.map((msg) => getMessageKey(msg)).filter(Boolean)
+      );
+
+      // Normalize messages to match render format - pass teacher/student context to ensure correct alignment
+      const normalizedMessages = messageList.map((msg) =>
+        normalizeMessage(
+          msg,
+          currentUserId,
+          currentUserRole,
+          currentUserName,
+          participantId
+        )
+      );
+
+      let newStudentMessages = 0;
+      normalizedMessages.forEach((msg) => {
+        const key = getMessageKey(msg);
+        const isKnown = key && previousKeys.has(key);
+        if (key && !isKnown) {
+          previousKeys.add(key);
+        }
+        if (!isKnown && msg.sender === "student") {
+          newStudentMessages += 1;
+        }
+      });
+
       setMessages((prev) => ({
         ...prev,
-        [conversationId]:
-          response.data?.messages?.map((msg) => ({
-            ...msg,
-            time: formatTime(msg.createdAt),
-          })) || [],
+        [conversationId]: normalizedMessages,
       }));
+
+      if (normalizedMessages.length > 0) {
+        const lastNormalized =
+          normalizedMessages[normalizedMessages.length - 1];
+        const lastMessageText = lastNormalized?.text || "";
+        const lastMessageTime =
+          lastNormalized?.time ||
+          formatTime(lastNormalized?.createdAt || new Date());
+        const isActiveConversation = selectedConversation === conversationId;
+        const currentEntry = findConversationById(conversationId);
+        const baseUnread = currentEntry?.unread || 0;
+        const updatedUnreadCount = isActiveConversation
+          ? 0
+          : baseUnread + newStudentMessages;
+
+        updateConversationEntry(conversationId, (conv) => {
+          if (!conv) return conv;
+          return {
+            ...conv,
+            lastMessage: lastMessageText || conv.lastMessage || "",
+            time: lastMessageTime || conv.time || "",
+            unread: updatedUnreadCount,
+          };
+        });
+
+        syncUnreadList(
+          conversationId,
+          updatedUnreadCount,
+          lastMessageText,
+          lastMessageTime,
+          currentEntry?.name || "Conversation"
+        );
+
+        const lastRawMessage = messageList[messageList.length - 1];
+        const previewKey = getMessageKey({
+          id: lastRawMessage.id || lastRawMessage.messageId,
+          sender: lastNormalized?.senderName || lastNormalized?.sender,
+          text: lastMessageText,
+          createdAt:
+            lastRawMessage.createdAt ||
+            lastRawMessage.timestamp ||
+            lastRawMessage.time,
+        });
+        if (previewKey) {
+          lastMessageKeysRef.current[conversationId] = previewKey;
+        }
+      }
     } catch (error) {
       console.error("Error fetching messages:", error);
     }
@@ -143,18 +757,69 @@ function TeacherMessages() {
     e.preventDefault();
     if (!newMessage.trim() || !selectedConversation || sendingMessage) return;
 
+    const messageContent = newMessage.trim();
+    const currentUser = authService.getCurrentUser();
+    const currentUserId = currentUser?.id;
+    const teacherName = currentUser?.name || "Teacher";
+    const teacherInitials = extractInitials(teacherName);
+    const sentAtISO = new Date().toISOString();
+
+    // Optimistic update - add message immediately to UI (aligned left for teacher)
+    const optimisticMessage = {
+      id: `temp-${Date.now()}`,
+      sender: "teacher",
+      text: messageContent,
+      senderInitial: teacherInitials,
+      senderName: teacherName,
+      time: formatTime(sentAtISO),
+      type: "text",
+      createdAt: sentAtISO,
+      isOptimistic: true,
+    };
+
+    setMessages((prev) => ({
+      ...prev,
+      [selectedConversation]: [
+        ...(prev[selectedConversation] || []),
+        optimisticMessage,
+      ],
+    }));
+
+    updateConversationEntry(selectedConversation, (conv) => {
+      if (!conv) return conv;
+      return {
+        ...conv,
+        lastMessage: messageContent,
+        time: formatTime(sentAtISO),
+        unread: conv?.unread || 0,
+      };
+    });
+
+    lastMessageKeysRef.current[selectedConversation] =
+      getMessageKey(optimisticMessage);
+
+    setNewMessage("");
+    setSendingMessage(true);
+
     try {
-      setSendingMessage(true);
-      await messageService.sendMessage(selectedConversation, {
-        text: newMessage,
-        type: "text",
+      // Use correct payload format: { receiverId, content }
+      const response = await messageService.sendMessage({
+        receiverId: selectedConversation,
+        content: messageContent,
       });
 
-      // Refresh messages
-      await fetchMessages(selectedConversation);
-      setNewMessage("");
+      // Refresh messages to get server response (removes optimistic message, adds real one)
+      await fetchMessages(selectedConversation, true);
     } catch (error) {
       console.error("Error sending message:", error);
+      console.error("Error details:", error?.response?.data || error?.message);
+      // Remove optimistic message on error
+      setMessages((prev) => ({
+        ...prev,
+        [selectedConversation]: (prev[selectedConversation] || []).filter(
+          (msg) => msg.id !== optimisticMessage.id
+        ),
+      }));
       alert("Failed to send message. Please try again.");
     } finally {
       setSendingMessage(false);
@@ -404,6 +1069,18 @@ function TeacherMessages() {
     return unreadConversations;
   };
 
+  // Sample messages data (for fallback)
+  const messagesByConversation = {
+    "web-development": [],
+    "data-structure": [],
+    "ux-research": [],
+    "advanced-physics-study": [],
+    "ada-okafor": [],
+    "mike-chen": [],
+    "emily-davis": [],
+    "physics-101-section": [],
+  };
+
   // Get messages for selected conversation
   const getCurrentMessages = () => {
     if (!selectedConversation) return [];
@@ -424,47 +1101,46 @@ function TeacherMessages() {
     : false;
   const activeMessages = getCurrentMessages();
 
-  const messagesByConversation = {
-    "web-development": groupMessages,
-    "data-structure": groupMessages,
-    "ux-research": groupMessages,
-    "advanced-physics-study": groupMessages,
-    "ada-okafor": studentMessages,
-    "mike-chen": studentMessages,
-    "emily-davis": studentMessages,
-    "physics-101-section": studentMessages,
+  // Get real members data - always show all students
+  const getMembers = () => {
+    // Always return all students, regardless of selection
+    if (allStudents.length > 0) {
+      return allStudents;
+    }
+
+    // Fallback: For selected student conversation, show that student
+    if (activeTab === "students" && selectedConv) {
+      const studentName = selectedConv.name || "Student";
+      const studentId = selectedConv.id || selectedConv.userId;
+      return [
+        {
+          id: studentId,
+          name: studentName,
+          initial: extractInitials(studentName),
+          displayInitial: extractInitials(studentName).substring(0, 1),
+          status: "offline",
+        },
+      ];
+    }
+
+    // Fallback: For group conversations, try to get from conversationDetails
+    if (isSelectedGroup && conversationDetails) {
+      const groupMembers =
+        conversationDetails.members || conversationDetails.students || [];
+      return groupMembers.map((member) => ({
+        id: member.id || member.userId,
+        name: member.name || "Member",
+        initial: extractInitials(member.name || "M"),
+        displayInitial: extractInitials(member.name || "M").substring(0, 1),
+        status: member.status || "offline",
+      }));
+    }
+
+    // Default: empty array
+    return [];
   };
 
-  const members = [
-    {
-      id: 1,
-      name: "Ada Okafor",
-      initial: "AO",
-      displayInitial: "S",
-      status: "online",
-    },
-    {
-      id: 2,
-      name: "Mike Chen",
-      initial: "MC",
-      displayInitial: "M",
-      status: "away",
-    },
-    {
-      id: 3,
-      name: "Emily Davis",
-      initial: "ED",
-      displayInitial: "E",
-      status: "offline",
-    },
-    {
-      id: 4,
-      name: "James Wilson",
-      initial: "JW",
-      displayInitial: "J",
-      status: "online",
-    },
-  ];
+  const members = getMembers();
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -617,6 +1293,23 @@ function TeacherMessages() {
             }`}
           >
             <i className="bi bi-grid text-xl"></i>
+          </a>
+
+          {/* Assignments */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/assignments");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center justify-center px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/assignments")
+                ? "bg-[#1A2332]"
+                : "hover:bg-[#1A2332] text-white/80"
+            }`}
+          >
+            <i className="bi bi-file-earmark-text text-xl"></i>
           </a>
 
           {/* Messages - Active */}
@@ -1260,7 +1953,7 @@ function TeacherMessages() {
                       {msg.sender === "student" && !isStudentAudioJ && (
                         <div className="w-8 h-8 bg-[#dbebff] rounded-full flex items-center justify-center shrink-0">
                           <span className="text-[#145efc] font-bold text-xs">
-                            S
+                            {msg.senderInitial || "S"}
                           </span>
                         </div>
                       )}
@@ -1449,7 +2142,7 @@ function TeacherMessages() {
 
               {/* Tabs */}
               <div className="px-4 pt-4 border-b border-gray-200">
-                <div className="flex gap-1.5 flex-wrap">
+                <div className="flex gap-1.5">
                   {[
                     { name: "Overview", icon: "bi-file-earmark-text" },
                     { name: "Feedback", icon: "bi-chat" },

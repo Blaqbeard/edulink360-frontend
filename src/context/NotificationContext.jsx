@@ -27,13 +27,14 @@ export const NotificationProvider = ({ children }) => {
       setIsLoading(true);
       const user = authService.getCurrentUser();
       const data = await notificationService.getUnreadCount(user?.role);
-      setUnreadCount(data.count || 0);
+      setUnreadCount(data?.count || data || 0);
     } catch (error) {
-      // Silently fail if not authenticated or other errors
-      // Don't log 403 errors as they're expected when not logged in
-      if (error.response?.status !== 403 && error.response?.status !== 401) {
+      // Silently fail for 403/401 errors (endpoint may not exist or user not authorized)
+      // Only log unexpected errors
+      if (error.response?.status !== 403 && error.response?.status !== 401 && error.response?.status !== 404) {
         console.error('Error fetching unread count:', error);
       }
+      // Default to 0 if endpoint doesn't exist or fails
       setUnreadCount(0);
     } finally {
       setIsLoading(false);
