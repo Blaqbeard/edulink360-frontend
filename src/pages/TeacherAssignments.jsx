@@ -4,7 +4,7 @@ import { teacherService } from "../services/teacherService";
 import { useNotifications } from "../context/NotificationContext";
 import { authService } from "../services/authService";
 import LogoutModal from "../components/common/LogoutModal";
-import TeacherTopBar from "../components/teacher/TeacherTopBar";
+import TeacherTopBar from "../components/Teacher/TeacherTopBar";
 
 const formatDate = (value) => {
   if (!value) return "No date";

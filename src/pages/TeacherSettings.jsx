@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { settingsService } from "../services/settingsService";
 import { useNotifications } from "../context/NotificationContext";
-import TeacherTopBar from "../components/teacher/TeacherTopBar";
+import TeacherTopBar from "../components/Teacher/TeacherTopBar";
 
 function TeacherSettings() {
   const navigate = useNavigate();

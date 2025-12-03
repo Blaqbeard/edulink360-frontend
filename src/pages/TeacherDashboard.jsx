@@ -7,7 +7,7 @@ import { authService } from "../services/authService";
 import { messageService } from "../services/messageService";
 import LogoutModal from "../components/common/LogoutModal";
 import LanguageSelector from "../components/common/LanguageSelector";
-import TeacherTopBar from "../components/teacher/TeacherTopBar";
+import TeacherTopBar from "../components/Teacher/TeacherTopBar";
 
 const toNumberOrNull = (value) =>
   typeof value === "number" && !Number.isNaN(value) ? value : null;

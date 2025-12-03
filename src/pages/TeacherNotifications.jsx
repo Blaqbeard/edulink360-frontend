@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { notificationService } from "../services/notificationService";
 import { useNotifications } from "../context/NotificationContext";
-import TeacherTopBar from "../components/teacher/TeacherTopBar";
+import TeacherTopBar from "../components/Teacher/TeacherTopBar";
 
 function TeacherNotifications() {
   const navigate = useNavigate();
