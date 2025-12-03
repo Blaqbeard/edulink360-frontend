@@ -118,13 +118,12 @@ function TeacherMessages() {
     lastMessageTime,
     fallbackName = "Conversation"
   ) => {
-    const fallbackConv =
-      findConversationById(conversationId) || {
-        id: conversationId,
-        name: fallbackName,
-        lastMessage: lastMessageText,
-        time: lastMessageTime,
-      };
+    const fallbackConv = findConversationById(conversationId) || {
+      id: conversationId,
+      name: fallbackName,
+      lastMessage: lastMessageText,
+      time: lastMessageTime,
+    };
 
     setUnreadConversations((prev) => {
       const exists = prev.find(
@@ -155,8 +154,7 @@ function TeacherMessages() {
       }
       if (!exists) return prev;
       return prev.filter(
-        (conv) =>
-          conv.id !== conversationId && conv.userId !== conversationId
+        (conv) => conv.id !== conversationId && conv.userId !== conversationId
       );
     });
   };
@@ -176,7 +174,8 @@ function TeacherMessages() {
       id: rawMessage.id || rawMessage.messageId,
       sender: normalizedPreview.senderName || normalizedPreview.sender,
       text: normalizedPreview.text || rawMessage.content || "",
-      createdAt: rawMessage.createdAt || rawMessage.timestamp || rawMessage.time,
+      createdAt:
+        rawMessage.createdAt || rawMessage.timestamp || rawMessage.time,
     });
     const previousKey = lastMessageKeysRef.current[studentId];
     const shouldIncrementUnread =
@@ -1288,8 +1287,8 @@ function TeacherMessages() {
             }}
             className={`flex items-center justify-center px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/dashboard")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-grid text-xl"></i>
@@ -1305,8 +1304,8 @@ function TeacherMessages() {
             }}
             className={`flex items-center justify-center px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/assignments")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-file-earmark-text text-xl"></i>
@@ -1321,8 +1320,8 @@ function TeacherMessages() {
             }}
             className={`flex items-center justify-center px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/messages")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#1203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-chat-dots text-xl"></i>
@@ -1338,11 +1337,24 @@ function TeacherMessages() {
             }}
             className={`flex items-center justify-center px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/notifications")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-bell text-xl"></i>
+          </a>
+
+          {/* Professional Development */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/upskilling");
+              setShowMobileSidebar(false);
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-mortarboard text-xl"></i>
           </a>
         </nav>
 
@@ -1358,8 +1370,8 @@ function TeacherMessages() {
             }}
             className={`flex flex-col items-center gap-1 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/settings")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-gear text-xl"></i>
@@ -1373,7 +1385,7 @@ function TeacherMessages() {
               e.preventDefault();
               navigate("/signup");
             }}
-            className="flex flex-col items-center gap-1 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex flex-col items-center gap-1 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-box-arrow-right text-xl"></i>
             <span className="text-xs">Logout</span>
@@ -1388,6 +1400,24 @@ function TeacherMessages() {
           onClick={() => setShowMobileSidebar(false)}
         ></div>
       )}
+
+      {/* Mobile floating controls for columns */}
+      <div className="md:hidden fixed bottom-24 left-4 z-40 flex flex-col gap-3">
+        {/* Open conversations list */}
+        <button
+          onClick={() => setShowMobileConversations(true)}
+          className="w-10 h-10 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700"
+        >
+          <i className="bi bi-chat-left-text text-lg" />
+        </button>
+        {/* Open details panel */}
+        <button
+          onClick={() => setShowMobileDetails(true)}
+          className="w-10 h-10 rounded-full bg-white shadow-md border border-gray-200 flex items-center justify-center text-gray-700"
+        >
+          <i className="bi bi-info-circle text-lg" />
+        </button>
+      </div>
 
       {/* Main Content Area */}
       <div className="flex-1 flex md:ml-20">
@@ -1735,13 +1765,6 @@ function TeacherMessages() {
                 </div>
               </div>
               <div className="flex items-center gap-2">
-                {/* Mobile Details Toggle Button */}
-                <button
-                  onClick={() => setShowMobileDetails(true)}
-                  className="md:hidden w-9 h-9 border border-gray-300 rounded flex items-center justify-center hover:bg-gray-50 transition-colors"
-                >
-                  <i className="bi bi-info-circle text-gray-900 text-sm"></i>
-                </button>
                 {/* Telephone Button */}
                 <button
                   onClick={() =>

@@ -7,6 +7,7 @@ import { authService } from "../services/authService";
 import { messageService } from "../services/messageService";
 import LogoutModal from "../components/common/LogoutModal";
 import LanguageSelector from "../components/common/LanguageSelector";
+import TeacherTopBar from "../components/teacher/TeacherTopBar";
 
 const toNumberOrNull = (value) =>
   typeof value === "number" && !Number.isNaN(value) ? value : null;
@@ -87,12 +88,15 @@ function TeacherDashboard() {
       );
 
       // Calculate actual progress rate from completed/total if not provided
-      const backendProgressRate = toNumberOrNull(dashboardSummary?.progressRate);
-      const calculatedProgressRate = 
+      const backendProgressRate = toNumberOrNull(
+        dashboardSummary?.progressRate
+      );
+      const calculatedProgressRate =
         completedClasses !== null && totalClasses > 0
           ? Math.round((completedClasses / totalClasses) * 100)
           : null;
-      const actualProgressRate = backendProgressRate ?? calculatedProgressRate ?? 0;
+      const actualProgressRate =
+        backendProgressRate ?? calculatedProgressRate ?? 0;
 
       const stats = {
         totalStudents: dashboardSummary?.totalStudents ?? 0,
@@ -104,8 +108,7 @@ function TeacherDashboard() {
         totalClasses,
       };
       const completionFromApi = toNumberOrNull(
-        dashboardSummary?.completionPercentage ??
-          dashboardSummary?.progressRate
+        dashboardSummary?.completionPercentage ?? dashboardSummary?.progressRate
       );
       const derivedCompletion =
         completionFromApi ??
@@ -131,7 +134,9 @@ function TeacherDashboard() {
 
       // Backend guide shows /teacher/dashboard-stats returns recentSubmissions: []
       // Extract from dashboard summary as per backend guide
-      const recentSubmissions = Array.isArray(dashboardSummary?.recentSubmissions)
+      const recentSubmissions = Array.isArray(
+        dashboardSummary?.recentSubmissions
+      )
         ? dashboardSummary.recentSubmissions
         : Array.isArray(dashboardSummary?.submissions)
         ? dashboardSummary.submissions
@@ -193,7 +198,9 @@ function TeacherDashboard() {
       const payload = {
         title: assignmentForm.title.trim(),
         description: assignmentForm.description.trim(),
-        dueDate: assignmentForm.dueDate ? new Date(assignmentForm.dueDate).toISOString() : undefined,
+        dueDate: assignmentForm.dueDate
+          ? new Date(assignmentForm.dueDate).toISOString()
+          : undefined,
       };
 
       if (!payload.title || !payload.description) {
@@ -207,11 +214,10 @@ function TeacherDashboard() {
 
       const result = await teacherService.createAssignment(payload);
       console.log("Assignment creation result:", result);
-      
+
       // Backend guide doesn't specify assignment creation notifications
       // The backend should handle notifications automatically
-      // No need for local notification cache
-      
+
       setAssignmentStatus({
         type: "success",
         message: "Assignment created successfully!",
@@ -238,22 +244,6 @@ function TeacherDashboard() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Mobile Hamburger Menu Button */}
-      <button
-        onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-[#0b1633] text-white rounded-lg flex items-center justify-center hover:bg-[#1A2332] transition-colors"
-      >
-        <i className="bi bi-list text-xl"></i>
-      </button>
-
-      {/* Mobile Sidebar Overlay */}
-      {showMobileSidebar && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-          onClick={() => setShowMobileSidebar(false)}
-        ></div>
-      )}
-
       {/* Left Sidebar - Fixed to extend full height */}
       <div
         className={`fixed left-0 top-0 w-64 bg-[#0b1633] flex flex-col h-screen z-40 transition-transform duration-300 ${
@@ -361,8 +351,8 @@ function TeacherDashboard() {
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/dashboard")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-grid text-xl"></i>
@@ -379,8 +369,8 @@ function TeacherDashboard() {
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/assignments")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-file-earmark-text text-xl"></i>
@@ -397,8 +387,8 @@ function TeacherDashboard() {
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/messages")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-chat-dots text-xl"></i>
@@ -415,8 +405,8 @@ function TeacherDashboard() {
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/notifications")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-bell text-xl"></i>
@@ -431,7 +421,7 @@ function TeacherDashboard() {
               navigate("/teacher/upskilling");
               setShowMobileSidebar(false);
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-mortarboard text-xl"></i>
             <span className="font-medium">Professional Development</span>
@@ -448,7 +438,7 @@ function TeacherDashboard() {
               navigate("/teacher/settings");
               setShowMobileSidebar(false);
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-gear text-xl"></i>
             <span className="font-medium">Settings</span>
@@ -461,7 +451,7 @@ function TeacherDashboard() {
               e.preventDefault();
               setShowLogoutModal(true);
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-box-arrow-right text-xl"></i>
             <span className="font-medium">Log out</span>
@@ -471,48 +461,13 @@ function TeacherDashboard() {
 
       {/* Main Content Area - Add left margin for fixed sidebar */}
       <div className="flex-1 flex flex-col overflow-y-auto md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10 animate-[fadeInDown_0.5s_ease-out]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Welcome back, {user?.name?.split(" ")[0] || "Teacher"}
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">Teacher</p>
-            </div>
-            <div className="flex items-center gap-4">
-              {/* Language Selector */}
-              <LanguageSelector />
-              {/* Notification Bell */}
-              <div
-                onClick={() => navigate("/teacher/notifications")}
-                className="relative cursor-pointer hover:scale-110 transition-transform duration-300"
-              >
-                <i className="bi bi-bell text-gray-600 text-xl hover:text-gray-900 transition-colors"></i>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadCount > 9 ? "9+" : unreadCount}
-                  </span>
-                )}
-              </div>
-              <div
-                onClick={() => navigate("/teacher/profile")}
-                className="w-10 h-10 bg-[#FF8A56] rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer"
-              >
-                <span className="text-white font-bold text-sm">
-                  {user?.name
-                    ? user.name
-                        .split(" ")
-                        .map((n) => n[0])
-                        .join("")
-                        .toUpperCase()
-                        .substring(0, 2)
-                    : "AA"}
-                </span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <TeacherTopBar
+          title="Dashboard overview"
+          subtitle="Teacher"
+          onMenuClick={() => setShowMobileSidebar(!showMobileSidebar)}
+          onAvatarClick={() => navigate("/teacher/profile")}
+          onBellClick={() => navigate("/teacher/notifications")}
+        />
 
         {/* Main Content */}
         <main className="flex-1 p-8 space-y-6">
@@ -644,19 +599,25 @@ function TeacherDashboard() {
                 <div className="grid grid-cols-3 gap-4">
                   <div>
                     <p className="text-white text-2xl font-bold">
-                      {performanceMetrics?.completed ?? dashboardData.classPerformance?.completed ?? 0}
+                      {performanceMetrics?.completed ??
+                        dashboardData.classPerformance?.completed ??
+                        0}
                     </p>
                     <p className="text-gray-400 text-sm">Completed</p>
                   </div>
                   <div>
                     <p className="text-white text-2xl font-bold">
-                      {performanceMetrics?.inProgress ?? dashboardData.classPerformance?.inProgress ?? 0}
+                      {performanceMetrics?.inProgress ??
+                        dashboardData.classPerformance?.inProgress ??
+                        0}
                     </p>
                     <p className="text-gray-400 text-sm">In Progress</p>
                   </div>
                   <div>
                     <p className="text-white text-2xl font-bold">
-                      {performanceMetrics?.total ?? dashboardData.classPerformance?.total ?? 0}
+                      {performanceMetrics?.total ??
+                        dashboardData.classPerformance?.total ??
+                        0}
                     </p>
                     <p className="text-gray-400 text-sm">Total</p>
                   </div>
@@ -667,9 +628,12 @@ function TeacherDashboard() {
               <div className="bg-white rounded-lg p-6 shadow-sm animate-[fadeInUp_0.6s_ease-out_0.45s_both]">
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-4">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-900">My Classes</h2>
+                    <h2 className="text-xl font-bold text-gray-900">
+                      My Classes
+                    </h2>
                     <p className="text-sm text-gray-500">
-                      {teacherClasses.length} active {teacherClasses.length === 1 ? "class" : "classes"}
+                      {teacherClasses.length} active{" "}
+                      {teacherClasses.length === 1 ? "class" : "classes"}
                     </p>
                   </div>
                   <button
@@ -681,17 +645,19 @@ function TeacherDashboard() {
                           className: cls.name,
                         }))
                       );
-                      
+
                       // If no students found in classes, fetch from contacts
                       if (allStudents.length === 0) {
                         try {
                           const contacts = await messageService.getContacts();
                           const studentList = Array.isArray(contacts)
-                            ? contacts.filter((c) => c.role?.toUpperCase() === "STUDENT")
+                            ? contacts.filter(
+                                (c) => c.role?.toUpperCase() === "STUDENT"
+                              )
                             : Array.isArray(contacts?.students)
                             ? contacts.students
                             : [];
-                          
+
                           allStudents = studentList.map((student) => ({
                             id: student.id || student.userId,
                             userId: student.id || student.userId,
@@ -700,10 +666,13 @@ function TeacherDashboard() {
                             className: "All Classes",
                           }));
                         } catch (error) {
-                          console.error("Error fetching students from contacts:", error);
+                          console.error(
+                            "Error fetching students from contacts:",
+                            error
+                          );
                         }
                       }
-                      
+
                       if (allStudents.length > 0) {
                         setSelectedClass({
                           name: "All Students",
@@ -711,7 +680,9 @@ function TeacherDashboard() {
                         });
                         setShowStudentModal(true);
                       } else {
-                        alert("No students found. Please ensure students are registered and assigned to your classes.");
+                        alert(
+                          "No students found. Please ensure students are registered and assigned to your classes."
+                        );
                       }
                     }}
                     className="px-4 py-2 bg-[#0b1633] text-white rounded-lg text-sm font-semibold hover:bg-[#1A2332] transition-all duration-200"
@@ -744,7 +715,9 @@ function TeacherDashboard() {
                         </p>
                         {cls.students && cls.students.length > 0 && (
                           <div className="mt-3 pt-3 border-t border-gray-100">
-                            <p className="text-xs text-gray-500 mb-2">Students:</p>
+                            <p className="text-xs text-gray-500 mb-2">
+                              Students:
+                            </p>
                             <div className="flex flex-wrap gap-2">
                               {cls.students.slice(0, 3).map((student, idx) => (
                                 <span
@@ -839,8 +812,7 @@ function TeacherDashboard() {
                             <div className="text-right">
                               <p className="text-xs text-gray-400">
                                 {formatTimestamp(
-                                  submission.submittedAt ||
-                                    submission.createdAt
+                                  submission.submittedAt || submission.createdAt
                                 )}
                               </p>
                               <p className="text-sm font-semibold text-gray-700">
@@ -857,7 +829,8 @@ function TeacherDashboard() {
                       <i className="bi bi-inbox text-4xl text-gray-300"></i>
                       <p className="text-gray-500 font-medium">Coming Soon</p>
                       <p className="text-sm text-gray-400">
-                        Recent submissions will appear here once students start submitting assignments.
+                        Recent submissions will appear here once students start
+                        submitting assignments.
                       </p>
                     </div>
                   </div>
@@ -881,8 +854,9 @@ function TeacherDashboard() {
                     <i className="bi bi-clipboard-check text-4xl text-gray-300"></i>
                     <p className="text-gray-500 font-medium">Coming Soon</p>
                     <p className="text-sm text-gray-400 max-w-md">
-                      The assignment grading interface will be available in the next update. 
-                      You'll be able to view submissions, provide grades, and give feedback to students.
+                      The assignment grading interface will be available in the
+                      next update. You'll be able to view submissions, provide
+                      grades, and give feedback to students.
                     </p>
                   </div>
                 </div>
@@ -907,10 +881,7 @@ function TeacherDashboard() {
                     {assignmentStatus.message}
                   </div>
                 )}
-                <form
-                  className="space-y-4"
-                  onSubmit={handleCreateAssignment}
-                >
+                <form className="space-y-4" onSubmit={handleCreateAssignment}>
                   <div>
                     <label className="block text-sm font-medium text-gray-900 mb-1">
                       Title
@@ -990,7 +961,8 @@ function TeacherDashboard() {
 
                 {/* Students List */}
                 <div className="flex-1 overflow-y-auto p-6">
-                  {selectedClass.students && selectedClass.students.length > 0 ? (
+                  {selectedClass.students &&
+                  selectedClass.students.length > 0 ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       {selectedClass.students.map((student, idx) => (
                         <div
@@ -1011,7 +983,9 @@ function TeacherDashboard() {
                                 {student.name || "Student"}
                               </p>
                               {student.email && (
-                                <p className="text-sm text-gray-500">{student.email}</p>
+                                <p className="text-sm text-gray-500">
+                                  {student.email}
+                                </p>
                               )}
                               {student.className && (
                                 <p className="text-xs text-gray-400 mt-1">
@@ -1022,7 +996,11 @@ function TeacherDashboard() {
                             </div>
                           </div>
                           <button
-                            onClick={() => handleMessageStudent(student.id || student.userId || idx)}
+                            onClick={() =>
+                              handleMessageStudent(
+                                student.id || student.userId || idx
+                              )
+                            }
                             className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
                           >
                             <i className="bi bi-chat-dots mr-2"></i>

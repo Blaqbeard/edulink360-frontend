@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { notificationService } from "../services/notificationService";
 import { useNotifications } from "../context/NotificationContext";
+import TeacherTopBar from "../components/teacher/TeacherTopBar";
 
 function TeacherNotifications() {
   const navigate = useNavigate();
@@ -62,10 +63,6 @@ function TeacherNotifications() {
   const fetchNotifications = useCallback(
     async (isBackgroundRefresh = false) => {
       try {
-        // Only show loading on initial fetch, not background refreshes
-        if (!isBackgroundRefresh) {
-          setLoading(true);
-        }
         // Backend guide shows /notifications endpoint for both roles
         const notificationList = await notificationService.getNotifications({
           page: 1,
@@ -135,14 +132,6 @@ function TeacherNotifications() {
 
   return (
     <div className="min-h-screen flex bg-gray-50">
-      {/* Mobile Hamburger Menu Button */}
-      <button
-        onClick={() => setShowMobileSidebar(!showMobileSidebar)}
-        className="md:hidden fixed top-4 left-4 z-50 w-10 h-10 bg-[#283447] text-white rounded-lg flex items-center justify-center hover:bg-[#1A2332] transition-colors"
-      >
-        <i className="bi bi-list text-xl"></i>
-      </button>
-
       {/* Mobile Sidebar Overlay */}
       {showMobileSidebar && (
         <div
@@ -248,21 +237,40 @@ function TeacherNotifications() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-2">
-          {/* Dashboard */}
+          {/* Dashboard - Active */}
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/dashboard");
+              setShowMobileSidebar(false);
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/dashboard")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-grid text-xl"></i>
             <span className="font-medium">Dashboard</span>
+          </a>
+
+          {/* Assignments */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/assignments");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/assignments")
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
+            }`}
+          >
+            <i className="bi bi-file-earmark-text text-xl"></i>
+            <span className="font-medium">Assignments</span>
           </a>
 
           {/* Messages */}
@@ -271,32 +279,48 @@ function TeacherNotifications() {
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/messages");
+              setShowMobileSidebar(false);
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/messages")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-chat-dots text-xl"></i>
             <span className="font-medium">Messages</span>
           </a>
 
-          {/* Notifications - Active */}
+          {/* Notifications */}
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/notifications");
+              setShowMobileSidebar(false);
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/notifications")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-bell text-xl"></i>
             <span className="font-medium">Notifications</span>
+          </a>
+
+          {/* Professional Development */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/upskilling");
+              setShowMobileSidebar(false);
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-mortarboard text-xl"></i>
+            <span className="font-medium">Professional Development</span>
           </a>
         </nav>
 
@@ -311,8 +335,8 @@ function TeacherNotifications() {
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/settings")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-gear text-xl"></i>
@@ -326,7 +350,7 @@ function TeacherNotifications() {
               e.preventDefault();
               navigate("/signup");
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-box-arrow-right text-xl"></i>
             <span className="font-medium">Log out</span>
@@ -336,40 +360,14 @@ function TeacherNotifications() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-y-auto md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-8 py-6 sticky top-0 z-10 animate-[fadeInDown_0.5s_ease-out]">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">
-                Notifications
-              </h1>
-              <p className="text-sm text-gray-500 mt-1">
-                {unreadCount} unread notifications
-              </p>
-            </div>
-            <div className="flex items-center gap-4">
-              <button
-                onClick={fetchNotifications}
-                className="px-4 py-2 rounded-lg border border-[#0b1633] text-sm font-semibold text-[#0b1633] hover:bg-[#0b1633] hover:text-white transition-colors"
-              >
-                Refresh
-              </button>
-              <button
-                onClick={handleMarkAllAsRead}
-                disabled={unreadCount === 0}
-                className="text-sm text-[#00B4D8] hover:underline font-medium disabled:text-gray-400 disabled:cursor-not-allowed"
-              >
-                Mark all as read
-              </button>
-              <div
-                onClick={() => navigate("/teacher/profile")}
-                className="w-10 h-10 bg-[#FF8A56] rounded-full flex items-center justify-center hover:scale-110 transition-transform duration-300 cursor-pointer"
-              >
-                <span className="text-white font-bold text-sm">AA</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <TeacherTopBar
+          title="Notifications"
+          subtitle={`${unreadCount} unread notifications`}
+          variant="title"
+          onMenuClick={() => setShowMobileSidebar(!showMobileSidebar)}
+          onAvatarClick={() => navigate("/teacher/profile")}
+          onBellClick={() => navigate("/teacher/notifications")}
+        />
 
         {/* Notifications List */}
         <main className="flex-1 p-8">

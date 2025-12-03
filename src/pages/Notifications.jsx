@@ -4,12 +4,21 @@ import { useNotifications } from "../context/NotificationContext";
 import { submissionCache } from "../utils/submissionCache";
 
 const iconClasses = {
-  submission: { icon: "bi-file-earmark-check", color: "bg-blue-100 text-blue-600" },
+  submission: {
+    icon: "bi-file-earmark-check",
+    color: "bg-blue-100 text-blue-600",
+  },
   message: { icon: "bi-chat-dots", color: "bg-green-100 text-green-600" },
-  feedback: { icon: "bi-chat-square-text", color: "bg-orange-100 text-orange-600" },
+  feedback: {
+    icon: "bi-chat-square-text",
+    color: "bg-orange-100 text-orange-600",
+  },
   deadline: { icon: "bi-clock", color: "bg-yellow-100 text-yellow-600" },
   grade: { icon: "bi-check-circle", color: "bg-purple-100 text-purple-600" },
-  announcement: { icon: "bi-megaphone", color: "bg-indigo-100 text-indigo-600" },
+  announcement: {
+    icon: "bi-megaphone",
+    color: "bg-indigo-100 text-indigo-600",
+  },
 };
 
 const formatTime = (dateString) => {
@@ -19,9 +28,12 @@ const formatTime = (dateString) => {
   const diffInSeconds = Math.floor((now - date) / 1000);
 
   if (diffInSeconds < 60) return "Just now";
-  if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} minutes ago`;
-  if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} hours ago`;
-  if (diffInSeconds < 604800) return `${Math.floor(diffInSeconds / 86400)} days ago`;
+  if (diffInSeconds < 3600)
+    return `${Math.floor(diffInSeconds / 60)} minutes ago`;
+  if (diffInSeconds < 86400)
+    return `${Math.floor(diffInSeconds / 3600)} hours ago`;
+  if (diffInSeconds < 604800)
+    return `${Math.floor(diffInSeconds / 86400)} days ago`;
   return date.toLocaleDateString();
 };
 
@@ -101,7 +113,9 @@ export default function Notifications() {
     try {
       await notificationService.markAllAsRead(role);
       submissionCache.clearNotifications();
-      setNotifications((prev) => prev.map((notif) => ({ ...notif, read: true })));
+      setNotifications((prev) =>
+        prev.map((notif) => ({ ...notif, read: true }))
+      );
       setStatusMessage("All notifications marked as read.");
     } catch (err) {
       setStatusMessage(
@@ -187,7 +201,9 @@ export default function Notifications() {
               <div
                 key={notif.id}
                 className={`flex items-start gap-4 p-4 rounded-xl border ${
-                  notif.read ? "bg-white border-gray-100" : "bg-blue-50 border-blue-100"
+                  notif.read
+                    ? "bg-white border-gray-100"
+                    : "bg-blue-50 border-blue-100"
                 }`}
               >
                 <div
@@ -198,7 +214,9 @@ export default function Notifications() {
                 <div className="flex-1">
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                     <div>
-                      <h3 className="font-semibold text-gray-900">{notif.title}</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        {notif.title}
+                      </h3>
                       <p className="text-sm text-gray-600">{notif.message}</p>
                     </div>
                     <p className="text-xs text-gray-400">
@@ -222,4 +240,3 @@ export default function Notifications() {
     </div>
   );
 }
-

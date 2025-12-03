@@ -31,13 +31,11 @@ import Upskilling from "../pages/Upskilling";
 export default function AppRoutes() {
   return (
     <Routes>
-      {/* PUBLIC AUTH PAGES */}
+      {/* PUBLIC AUTH PAGES (shared auth layout with left branding panel) */}
       <Route element={<AuthLayout />}>
         <Route path="/login" element={<Login />} />
+        <Route path="/signup" element={<Signup />} />
       </Route>
-
-      {/* Standalone signup page */}
-      <Route path="/signup" element={<Signup />} />
 
       {/* STUDENT APP PAGES */}
       <Route

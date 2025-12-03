@@ -242,17 +242,40 @@ function TeacherProfile() {
 
         {/* Navigation */}
         <nav className="flex-1 px-4 space-y-2">
-          {/* Dashboard */}
+          {/* Dashboard - Active */}
           <a
             href="#"
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/dashboard");
+              setShowMobileSidebar(false);
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/dashboard")
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
+            }`}
           >
             <i className="bi bi-grid text-xl"></i>
             <span className="font-medium">Dashboard</span>
+          </a>
+
+          {/* Assignments */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/assignments");
+              setShowMobileSidebar(false);
+            }}
+            className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
+              isActive("/teacher/assignments")
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
+            }`}
+          >
+            <i className="bi bi-file-earmark-text text-xl"></i>
+            <span className="font-medium">Assignments</span>
           </a>
 
           {/* Messages */}
@@ -261,11 +284,12 @@ function TeacherProfile() {
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/messages");
+              setShowMobileSidebar(false);
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/messages")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-chat-dots text-xl"></i>
@@ -278,15 +302,30 @@ function TeacherProfile() {
             onClick={(e) => {
               e.preventDefault();
               navigate("/teacher/notifications");
+              setShowMobileSidebar(false);
             }}
             className={`flex items-center gap-3 px-4 py-3 rounded-lg text-white transition-all duration-200 hover:translate-x-1 ${
               isActive("/teacher/notifications")
-                ? "bg-[#1A2332]"
-                : "hover:bg-[#1A2332] text-white/80"
+                ? "bg-[#203875]"
+                : "hover:bg-[#203875] text-white/80"
             }`}
           >
             <i className="bi bi-bell text-xl"></i>
             <span className="font-medium">Notifications</span>
+          </a>
+
+          {/* Professional Development */}
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              navigate("/teacher/upskilling");
+              setShowMobileSidebar(false);
+            }}
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
+          >
+            <i className="bi bi-mortarboard text-xl"></i>
+            <span className="font-medium">Professional Development</span>
           </a>
         </nav>
 
@@ -299,7 +338,7 @@ function TeacherProfile() {
               e.preventDefault();
               navigate("/teacher/settings");
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-gear text-xl"></i>
             <span className="font-medium">Settings</span>
@@ -312,7 +351,7 @@ function TeacherProfile() {
               e.preventDefault();
               navigate("/signup");
             }}
-            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#1A2332] rounded-lg transition-all duration-200 hover:translate-x-1"
+            className="flex items-center gap-3 px-4 py-3 text-white/80 hover:bg-[#203875] rounded-lg transition-all duration-200 hover:translate-x-1"
           >
             <i className="bi bi-box-arrow-right text-xl"></i>
             <span className="font-medium">Log out</span>

@@ -41,8 +41,8 @@ const NavItem = ({ to, icon: Icon, children }) => (
     className={({ isActive }) =>
       `flex items-center p-3 my-1 rounded-lg transition-colors ${
         isActive
-          ? "bg-blue-600 text-white"
-          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+          ? "bg-[#203875] text-white"
+          : "text-gray-300 hover:bg-[#203875] hover:text-white"
       }`
     }
   >
@@ -60,8 +60,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
   const inferredRole = location.pathname.startsWith("/teacher")
     ? "TEACHER"
     : "STUDENT";
-  const role =
-    (user?.role && user.role.toUpperCase()) || inferredRole;
+  const role = (user?.role && user.role.toUpperCase()) || inferredRole;
 
   const navLinks = role === "TEACHER" ? teacherNavLinks : studentNavLinks;
   const settingsPath = role === "TEACHER" ? "/teacher/settings" : "/settings";
@@ -108,7 +107,7 @@ export default function Sidebar({ isSidebarOpen, setIsSidebarOpen }) {
           </NavItem>
           <button
             onClick={handleLogoutClick}
-            className="flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-gray-700 hover:text-white w-full"
+            className="flex items-center p-3 my-1 rounded-lg text-gray-300 hover:bg-[#203875] hover:text-white w-full"
           >
             <LogOut />
             <span className="ml-4 font-medium">Log out</span>

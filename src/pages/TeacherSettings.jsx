@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { settingsService } from "../services/settingsService";
 import { useNotifications } from "../context/NotificationContext";
+import TeacherTopBar from "../components/teacher/TeacherTopBar";
 
 function TeacherSettings() {
   const navigate = useNavigate();
@@ -264,32 +265,14 @@ function TeacherSettings() {
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col overflow-y-auto md:ml-64">
-        {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-4 sm:px-6 md:px-8 py-4 sm:py-6 sticky top-0 z-10 animate-[fadeInDown_0.5s_ease-out]">
-          <div className="flex items-center justify-between">
-            <h1 className="text-lg font-bold text-[#0b1633]">Account</h1>
-            <div className="flex items-center gap-4">
-              {/* Notification Bell */}
-              <div
-                onClick={() => navigate("/teacher/notifications")}
-                className="relative cursor-pointer hover:scale-110 transition-transform duration-300"
-              >
-                <i className="bi bi-bell text-gray-600 text-xl hover:text-gray-900 transition-colors"></i>
-                {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadCount}
-                  </span>
-                )}
-              </div>
-              <div
-                onClick={() => navigate("/teacher/profile")}
-                className="w-10 h-10 bg-[#FF8A56] rounded-full flex items-center justify-center cursor-pointer hover:scale-110 transition-transform duration-300"
-              >
-                <span className="text-white font-bold text-sm">AA</span>
-              </div>
-            </div>
-          </div>
-        </header>
+        <TeacherTopBar
+          title="Account"
+          subtitle=""
+          variant="title"
+          onMenuClick={() => setShowMobileSidebar(!showMobileSidebar)}
+          onAvatarClick={() => navigate("/teacher/profile")}
+          onBellClick={() => navigate("/teacher/notifications")}
+        />
 
         {/* Main Content */}
         <main className="flex-1 p-4 sm:p-6 md:p-8 space-y-6">
