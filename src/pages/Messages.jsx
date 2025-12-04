@@ -4,6 +4,8 @@ import ChatWindow from "../components/messages/ChatWindow";
 import GroupInfoPanel from "../components/messages/GroupInfoPanel";
 import { messageService } from "../services/messageService";
 
+const STUDENT_MESSAGES_CONTACTS_CACHE_KEY = "studentMessagesContactsCache";
+
 const generateTempId = (prefix = "item") =>
   `${prefix}-${Math.random().toString(36).slice(2, 11)}`;
 
@@ -336,9 +338,29 @@ export default function Messages() {
   };
 
   useEffect(() => {
-    const loadConversations = async () => {
+    const hydrateFromCache = () => {
+      if (typeof window === "undefined") return false;
       try {
-        setLoading(true);
+        const cached = sessionStorage.getItem(
+          STUDENT_MESSAGES_CONTACTS_CACHE_KEY
+        );
+        if (!cached) return false;
+        const parsed = JSON.parse(cached);
+        setContacts(parsed.contacts || []);
+        setTeachers(parsed.teachers || []);
+        setLoading(false);
+        return true;
+      } catch (cacheError) {
+        console.warn("Unable to parse student messages cache:", cacheError);
+        return false;
+      }
+    };
+
+    const loadConversations = async (skipSpinner = false) => {
+      try {
+        if (!skipSpinner) {
+          setLoading(true);
+        }
         setConversationError(null);
 
         // Load contacts (teachers for students)
@@ -352,15 +374,27 @@ export default function Messages() {
             setTeachers([]);
           } else {
             const contactsData = await messageService.getContacts();
-            const contactsList = Array.isArray(contactsData)
-              ? contactsData.filter((c) => c.role?.toUpperCase() === "TEACHER")
-              : Array.isArray(contactsData?.teachers)
-              ? contactsData.teachers
-              : Array.isArray(contactsData?.data)
-              ? contactsData.data.filter(
-                  (c) => c.role?.toUpperCase() === "TEACHER"
-                )
-              : [];
+
+            let contactsList = [];
+            if (Array.isArray(contactsData)) {
+              // Some backends return only teachers in a flat array without role;
+              // try filtering by role first, then fall back to the full list if filter is empty.
+              const teacherOnly = contactsData.filter(
+                (c) => c.role?.toUpperCase() === "TEACHER"
+              );
+              contactsList = teacherOnly.length > 0 ? teacherOnly : contactsData;
+            } else if (Array.isArray(contactsData?.teachers)) {
+              contactsList = contactsData.teachers;
+            } else if (Array.isArray(contactsData?.data)) {
+              const teacherOnly = contactsData.data.filter(
+                (c) => c.role?.toUpperCase() === "TEACHER"
+              );
+              contactsList =
+                teacherOnly.length > 0 ? teacherOnly : contactsData.data;
+            } else {
+              contactsList = [];
+            }
+
             setContacts(contactsList);
 
             // Format teachers as conversation list for display (normalized)
@@ -383,6 +417,17 @@ export default function Messages() {
               });
             });
             setTeachers(formattedTeachers);
+
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(
+                STUDENT_MESSAGES_CONTACTS_CACHE_KEY,
+                JSON.stringify({
+                  contacts: contactsList,
+                  teachers: formattedTeachers,
+                  timestamp: Date.now(),
+                })
+              );
+            }
           }
         } catch (err) {
           // Silently handle 403/401 errors for contacts endpoint
@@ -407,11 +452,14 @@ export default function Messages() {
           "Unable to load messages. Please refresh the page."
         );
       } finally {
-        setLoading(false);
+        if (!skipSpinner) {
+          setLoading(false);
+        }
       }
     };
 
-    loadConversations();
+    const hasCache = hydrateFromCache();
+    loadConversations(hasCache);
   }, []);
 
   const handleStartConversation = async (teacherId) => {

@@ -3,6 +3,8 @@ import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { messageService } from "../services/messageService";
 import { authService } from "../services/authService";
 
+const TEACHER_MESSAGES_STUDENTS_CACHE_KEY = "teacherMessagesStudentsCache";
+
 function TeacherMessages() {
   const navigate = useNavigate();
   const location = useLocation();
@@ -434,7 +436,6 @@ function TeacherMessages() {
 
   const fetchConversations = async () => {
     try {
-      setLoading(true);
       const type =
         activeTab === "groups"
           ? "groups"
@@ -446,6 +447,33 @@ function TeacherMessages() {
 
       // For students tab, fetch from /messages/contacts and filter for students
       if (type === "students") {
+        let usedCache = false;
+
+        // Try to hydrate from sessionStorage to avoid delay on repeat visits
+        if (typeof window !== "undefined") {
+          try {
+            const cached = sessionStorage.getItem(
+              TEACHER_MESSAGES_STUDENTS_CACHE_KEY
+            );
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              if (Array.isArray(parsed.students)) {
+                setStudents(parsed.students);
+                usedCache = true;
+              }
+            }
+          } catch (cacheError) {
+            console.warn(
+              "Unable to parse teacher messages students cache:",
+              cacheError
+            );
+          }
+        }
+
+        if (!usedCache) {
+          setLoading(true);
+        }
+
         try {
           const contacts = await messageService.getContacts();
           const studentList = Array.isArray(contacts)
@@ -459,6 +487,17 @@ function TeacherMessages() {
             mapStudentConversation(student)
           );
           setStudents(formattedStudents);
+
+          if (typeof window !== "undefined") {
+            sessionStorage.setItem(
+              TEACHER_MESSAGES_STUDENTS_CACHE_KEY,
+              JSON.stringify({
+                students: formattedStudents,
+                rawStudents: studentList,
+                timestamp: Date.now(),
+              })
+            );
+          }
         } catch (contactError) {
           console.error("Error fetching students from contacts:", contactError);
           // Fallback to old method
@@ -474,6 +513,7 @@ function TeacherMessages() {
           setStudents(fallbackStudents);
         }
       } else {
+        setLoading(true);
         const response = await messageService.getConversations(type, "teacher");
 
         if (type === "groups") {
