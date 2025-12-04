@@ -23,6 +23,7 @@ export default function RecentAssignments({ assignments = [], items = [] }) {
 
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
+      {/* Card Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold text-gray-800">Recent Assignments</h2>
         <a
@@ -33,6 +34,7 @@ export default function RecentAssignments({ assignments = [], items = [] }) {
         </a>
       </div>
 
+      {/* List of Assignments */}
       <div className="space-y-6">
         {hasAssignments ? (
           list.slice(0, 5).map((item, index) => {

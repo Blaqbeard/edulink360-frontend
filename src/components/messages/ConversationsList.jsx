@@ -25,13 +25,17 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
   <button
     onClick={onClick}
     className={`w-full text-left p-4 flex space-x-4 items-start border-b border-gray-200 transition-colors hover:bg-gray-50 ${
+<<<<<<< HEAD
+      isActive ? "bg-blue-40" : ""
+=======
       isActive ? "bg-blue-50" : ""
+>>>>>>> 52633fc5f6dcd93935268bcaadcb768ca65f2398
     }`}
   >
     {/* Blue indicator for active chat */}
     <div
       className={`w-1 rounded-full h-12 ${
-        isActive ? "bg-blue-600" : "bg-transparent"
+        isActive ? "bg-blue-400" : "bg-transparent"
       }`}
     ></div>
 
@@ -96,6 +100,10 @@ export default function ConversationsList({
     >
       {/* Header Area */}
       <div className="p-4 space-y-4 border-b border-gray-200">
+<<<<<<< HEAD
+        <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+        <FilterTabs />
+=======
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
           {onNewMessage && (
@@ -112,6 +120,7 @@ export default function ConversationsList({
           activeTab={activeTab || "Groups"}
           onTabChange={onTabChange}
         />
+>>>>>>> 52633fc5f6dcd93935268bcaadcb768ca65f2398
         <div className="relative">
           <Search
             size={20}

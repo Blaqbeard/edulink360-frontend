@@ -261,6 +261,12 @@ export default function ChatWindow({
         </div>
       </div>
 
+<<<<<<< HEAD
+      {/* Message Input (unchanged) */}
+      <div className="p-4 bg-white border-t border-gray-200">
+        <div className="flex items-center space-x-4 bg-gray-100 border border-gray-100 rounded-lg px-4 py-2">
+          <button className="text-gray-500 hover:text-gray-700">
+=======
       {/* Message Input */}
       <div className="p-4 bg-white border-t border-gray-200">
         <form
@@ -275,6 +281,7 @@ export default function ChatWindow({
               // TODO: Handle file attachment
             }}
           >
+>>>>>>> 52633fc5f6dcd93935268bcaadcb768ca65f2398
             <Paperclip size={20} />
           </button>
           <input

@@ -41,8 +41,13 @@ const NavItem = ({ to, icon: Icon, children }) => (
     className={({ isActive }) =>
       `flex items-center p-3 my-1 rounded-lg transition-colors ${
         isActive
+<<<<<<< HEAD
+          ? "bg-blue-400 text-white"
+          : "text-gray-300 hover:bg-gray-700 hover:text-white"
+=======
           ? "bg-[#203875] text-white"
           : "text-gray-300 hover:bg-[#203875] hover:text-white"
+>>>>>>> 52633fc5f6dcd93935268bcaadcb768ca65f2398
       }`
     }
   >

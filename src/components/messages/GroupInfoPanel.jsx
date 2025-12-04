@@ -82,7 +82,11 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
   }
 
   return (
+<<<<<<< HEAD
+    <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l border-gray-200 lg:flex-shrink-0 flex flex-col">
+=======
     <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:border-l-gray-200 lg:flex-shrink-0 flex flex-col">
+>>>>>>> 52633fc5f6dcd93935268bcaadcb768ca65f2398
       {/* UNIVERSAL HEADER WITH BACK ARROW */}
 
       <div className="p-4 border-b border-gray-200 flex items-center space-x-4 flex-shrink-0">
