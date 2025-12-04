@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { studentService } from "../services/studentService";
 
+const STUDENT_DASHBOARD_CACHE_KEY = "studentDashboardCache";
+
 export default function useStudentDashboard() {
   const [dashboardStats, setDashboardStats] = useState(null);
   const [recentAssignments, setRecentAssignments] = useState([]);
@@ -11,8 +13,27 @@ export default function useStudentDashboard() {
   useEffect(() => {
     let cancelled = false;
 
-    async function load() {
-      setLoading(true);
+    const hydrateFromCache = () => {
+      if (typeof window === "undefined") return false;
+      try {
+        const cached = sessionStorage.getItem(STUDENT_DASHBOARD_CACHE_KEY);
+        if (!cached) return false;
+        const parsed = JSON.parse(cached);
+        if (cancelled) return false;
+
+        setDashboardStats(parsed.dashboardStats || null);
+        setRecentAssignments(parsed.recentAssignments || []);
+        setRecentFeedbacks(parsed.recentFeedbacks || []);
+        setLoading(false);
+        return true;
+      } catch (cacheError) {
+        console.warn("Unable to parse student dashboard cache:", cacheError);
+        return false;
+      }
+    };
+
+    async function load(showSpinner = true) {
+      if (showSpinner) setLoading(true);
       setError(null);
       try {
         const [summary, assignmentsList] = await Promise.all([
@@ -73,10 +94,25 @@ export default function useStudentDashboard() {
           (x, y) => new Date(y.date).getTime() - new Date(x.date).getTime()
         );
 
+        const normalizedAssignments = assignments.slice(0, 3);
+        const normalizedFeedbacks = feedbacks.slice(0, 3);
+
         // take latest 3 for UI
         setDashboardStats(summaryData);
-        setRecentAssignments(assignments.slice(0, 3));
-        setRecentFeedbacks(feedbacks.slice(0, 3));
+        setRecentAssignments(normalizedAssignments);
+        setRecentFeedbacks(normalizedFeedbacks);
+
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(
+            STUDENT_DASHBOARD_CACHE_KEY,
+            JSON.stringify({
+              dashboardStats: summaryData,
+              recentAssignments: normalizedAssignments,
+              recentFeedbacks: normalizedFeedbacks,
+              timestamp: Date.now(),
+            })
+          );
+        }
       } catch (err) {
         console.error("Dashboard load error:", err);
         setError(
@@ -89,7 +125,9 @@ export default function useStudentDashboard() {
       }
     }
 
-    load();
+    const hasCache = hydrateFromCache();
+    load(!hasCache);
+
     return () => {
       cancelled = true;
     };

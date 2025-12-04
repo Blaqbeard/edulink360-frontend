@@ -154,7 +154,7 @@ export default function Profile() {
       const normalized = normalizeProfile(updatedProfile ?? payload);
       setUserData(normalized);
       setProfileSnapshot(normalized);
-      setIsEditing(false);
+    setIsEditing(false);
       setStatus({ type: "success", message: "Profile updated successfully." });
     } catch (err) {
       setStatus({
@@ -409,12 +409,12 @@ export default function Profile() {
       <Card>
         <h3 className="text-lg font-semibold mb-4">Your Class Teacher</h3>
         {classTeacher ? (
-          <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
-            <div className="flex items-center space-x-4">
-              <div className="h-12 w-12 flex items-center justify-center rounded-full bg-gray-800 text-white font-bold">
+        <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
+          <div className="flex items-center space-x-4">
+            <div className="h-12 w-12 flex items-center justify-center rounded-full bg-gray-800 text-white font-bold">
                 {getInitials(classTeacher.name || "Teacher")}
-              </div>
-              <div>
+            </div>
+            <div>
                 <p className="font-bold text-gray-800">{classTeacher.name}</p>
                 <p className="text-sm text-gray-500">
                   {classTeacher.role || "Class Advisor"}
@@ -425,14 +425,14 @@ export default function Profile() {
                     : ""}
                 </p>
                 {classTeacher.officeHours && (
-                  <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400">
                     Office Hours: {classTeacher.officeHours}
-                  </p>
+              </p>
                 )}
-              </div>
             </div>
-            <Button className="py-1 px-4">Send Message</Button>
           </div>
+          <Button className="py-1 px-4">Send Message</Button>
+        </div>
         ) : (
           <div className="bg-blue-50 text-blue-700 px-4 py-3 rounded-lg border border-blue-100">
             Teacher assignment info will appear here once your school shares it.

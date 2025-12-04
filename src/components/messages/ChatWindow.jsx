@@ -13,15 +13,28 @@ import {
   Check,
 } from "lucide-react";
 
+const getInitials = (value, fallback = "ED") => {
+  if (!value || typeof value !== "string") return fallback;
+  const initials = value
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+  return initials || fallback;
+};
+
 const TextMessage = ({ msg, conversation }) => {
   // Ensure sender is always a string
-  const senderName = typeof msg.sender === 'string' 
-    ? msg.sender 
-    : (typeof msg.sender === 'object' && msg.sender?.name) 
-      ? msg.sender.name 
+  const senderName =
+    typeof msg.sender === "string"
+      ? msg.sender
+      : typeof msg.sender === "object" && msg.sender?.name
+      ? msg.sender.name
       : String(msg.sender || "User");
-  const senderInitial = senderName.charAt(0) || "U";
-  
+  const senderInitial = getInitials(senderName, "U");
+
   return (
   <div
     className={`flex items-end gap-2 ${
@@ -60,18 +73,19 @@ const TextMessage = ({ msg, conversation }) => {
       </div>
     )}
   </div>
-  );
+);
 };
 
 // Special feedback message card
 const FeedbackMessage = ({ msg }) => {
-  const senderName = typeof msg.sender === 'string' 
-    ? msg.sender 
-    : (typeof msg.sender === 'object' && msg.sender?.name) 
-      ? msg.sender.name 
+  const senderName =
+    typeof msg.sender === "string"
+      ? msg.sender
+      : typeof msg.sender === "object" && msg.sender?.name
+      ? msg.sender.name
       : String(msg.sender || "User");
-  const senderInitial = senderName.charAt(0) || "U";
-  
+  const senderInitial = getInitials(senderName, "U");
+
   return (
   <div className="flex items-end gap-2">
     <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-green-100 text-green-600 font-bold text-sm">
@@ -107,18 +121,19 @@ const FeedbackMessage = ({ msg }) => {
       <p className="text-xs mt-1 text-left text-gray-400">{msg.time}</p>
     </div>
   </div>
-  );
+);
 };
 
 // Audio message bubble
 const AudioMessage = ({ msg }) => {
-  const senderName = typeof msg.sender === 'string' 
-    ? msg.sender 
-    : (typeof msg.sender === 'object' && msg.sender?.name) 
-      ? msg.sender.name 
+  const senderName =
+    typeof msg.sender === "string"
+      ? msg.sender
+      : typeof msg.sender === "object" && msg.sender?.name
+      ? msg.sender.name
       : String(msg.sender || "User");
-  const senderInitial = senderName.charAt(0) || "U";
-  
+  const senderInitial = getInitials(senderName, "U");
+
   return (
   <div className="flex items-end gap-2">
     <div className="h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-full bg-orange-100 text-orange-600 font-bold text-sm">
@@ -139,7 +154,7 @@ const AudioMessage = ({ msg }) => {
       <p className="text-xs mt-1 text-left text-gray-400">{msg.time}</p>
     </div>
   </div>
-  );
+);
 };
 
 // Image grid message
@@ -226,8 +241,8 @@ export default function ChatWindow({
             onClick={onHeaderClick}
             className="flex items-center space-x-3 text-left"
           >
-            <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full bg-purple-100">
-              <img src={conversation.avatarUrl} alt="" className="h-6 w-6" />
+            <div className="h-12 w-12 flex-shrink-0 flex items-center justify-center rounded-full bg-purple-100 text-purple-700 font-semibold text-lg">
+              {getInitials(conversation.name || conversation.sender || "Teacher", "ED")}
             </div>
             <div>
               <p className="font-bold text-lg text-gray-900">

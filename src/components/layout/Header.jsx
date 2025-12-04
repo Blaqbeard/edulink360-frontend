@@ -8,7 +8,17 @@ import LanguageSelector from "../common/LanguageSelector";
 
 export default function Header({ title, onMenuClick }) {
   const { user } = useAuth(); // This will now work
-  const userInitials = user ? user.initials : "...";
+  // Derive initials from user data if backend doesn't provide `initials`
+  const rawName =
+    user?.name || user?.fullName || user?.username || user?.email || "";
+  const userInitials =
+    rawName
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2) || "...";
 
   return (
     <header className="bg-white shadow-sm p-4">

@@ -10,29 +10,47 @@ import {
   Cog,
 } from "lucide-react";
 
+const getInitials = (value, fallback = "ED") => {
+  if (!value || typeof value !== "string") return fallback;
+  const initials = value
+    .split(" ")
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase()
+    .substring(0, 2);
+  return initials || fallback;
+};
+
 const InfoTabs = () => {
   const [activeTab, setActiveTab] = useState("Overview");
   const tabs = [
-    { name: "Overview", icon: <FileText size={18} /> },
-    { name: "Feedback", icon: <MessageSquare size={18} /> },
-    { name: "Media", icon: <Image size={18} /> },
-    { name: "Settings", icon: <Cog size={18} /> },
+    { name: "Overview", icon: FileText },
+    { name: "Feedback", icon: MessageSquare },
+    { name: "Media", icon: Image },
+    { name: "Settings", icon: Cog },
   ];
 
   return (
     <div className="w-full border-b border-gray-200">
-      <div className="flex items-center justify-around">
+      <div className="grid grid-cols-4 gap-3 px-4 pb-2">
         {tabs.map((tab) => (
           <button
             key={tab.name}
             onClick={() => setActiveTab(tab.name)}
-            className={`flex-1 flex items-center justify-center space-x-2 py-3 text-sm font-medium transition-colors ${
+            className={`flex flex-col items-center justify-center gap-1 rounded-xl py-3 text-xs font-semibold transition-all ${
               activeTab === tab.name
-                ? "text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+                ? "text-blue-600 bg-blue-50 border border-blue-100 shadow-sm"
+                : "text-gray-500 hover:text-gray-700 border border-transparent hover:border-gray-200"
             }`}
           >
-            {tab.icon}
+            <div
+              className={`w-10 h-10 rounded-full flex items-center justify-center ${
+                activeTab === tab.name ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-500"
+              }`}
+            >
+              <tab.icon size={18} />
+            </div>
             <span>{tab.name}</span>
           </button>
         ))}
@@ -47,18 +65,19 @@ const MemberItem = ({ member }) => {
     away: "bg-yellow-500",
     offline: "bg-gray-300",
   };
+  const name = member?.name || "Member";
+  const initials = getInitials(name, "M");
+  const statusClass = statusColors[member?.status] || "bg-gray-300";
 
   return (
     <div className="flex items-center justify-between">
       <div className="flex items-center space-x-3">
         <div className="h-10 w-10 flex-shrink-0 flex items-center justify-center rounded-full bg-blue-100 text-blue-600 font-semibold">
-          {member.name.charAt(0)}
+          {initials}
         </div>
-        <p className="font-medium text-gray-800">{member.name}</p>
+        <p className="font-medium text-gray-800">{name}</p>
       </div>
-      <div
-        className={`h-2.5 w-2.5 rounded-full ${statusColors[member.status]}`}
-      ></div>
+      <div className={`h-2.5 w-2.5 rounded-full ${statusClass}`}></div>
     </div>
   );
 };
@@ -81,6 +100,14 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
     );
   }
 
+  const memberCount = Array.isArray(conversation.members)
+    ? conversation.members.length
+    : 0;
+  const panelInitials = getInitials(
+    conversation.name || conversation.sender || "Teacher",
+    "ED"
+  );
+
   return (
     <div className="absolute inset-0 z-20 bg-white lg:static lg:z-auto lg:w-1/4 lg:border-l lg:border-l-gray-200 lg:flex-shrink-0 flex flex-col">
       {/* UNIVERSAL HEADER WITH BACK ARROW */}
@@ -96,8 +123,8 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
       <div className="flex-1 flex flex-col overflow-y-auto">
         {/* Group Header (inside the scrollable area) */}
         <div className="flex flex-col items-center text-center p-6">
-          <div className="h-20 w-20 mb-4 flex items-center justify-center rounded-full bg-purple-100">
-            <img src={conversation.avatarUrl} alt="" className="h-8 w-8" />
+          <div className="h-20 w-20 mb-4 flex items-center justify-center rounded-full bg-purple-100 text-purple-700 text-2xl font-semibold">
+            {panelInitials}
           </div>
           <h2 className="text-xl font-bold text-gray-900">
             {conversation.name}
@@ -106,7 +133,7 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
             <p className="text-sm text-gray-500">{conversation.subtitle}</p>
           )}
           <p className="text-sm text-gray-500">
-            {conversation.members.length} members
+            {memberCount} member{memberCount === 1 ? "" : "s"}
           </p>
           <div className="flex items-center space-x-6 mt-4 text-gray-500">
             <button className="hover:text-gray-800">
@@ -135,11 +162,11 @@ export default function GroupInfoPanel({ conversation, isOpen, onClose }) {
           {/* Members List Section */}
           <div>
             <h3 className="font-semibold text-gray-800 mb-4">
-              Members ({conversation.members.length})
+              Members ({memberCount})
             </h3>
             <div className="space-y-4">
-              {conversation.members.map((member) => (
-                <MemberItem key={member.id} member={member} />
+              {(conversation.members || []).map((member) => (
+                <MemberItem key={member?.id || member?.userId} member={member} />
               ))}
             </div>
           </div>

@@ -21,10 +21,21 @@ const FilterTabs = ({ tabs = ["Groups", "Students", "Favorites", "Unread"], acti
   );
 };
 
-const ConversationItem = ({ convo, isActive, onClick }) => (
+const ConversationItem = ({ convo, isActive, onClick }) => {
+  const initials =
+    (convo.sender || convo.name || "T")
+      .toString()
+      .split(" ")
+      .filter(Boolean)
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .substring(0, 2) || "T";
+
+  return (
   <button
     onClick={onClick}
-    className={`w-full text-left p-4 flex space-x-4 items-start border-b border-gray-200 transition-colors hover:bg-gray-50 ${
+      className={`w-full text-left p-4 flex space-x-4 items-start border-b border-gray-200 transition-colors hover:bg-gray-50 ${
       isActive ? "bg-blue-50" : ""
     }`}
   >
@@ -35,9 +46,9 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
       }`}
     ></div>
 
-    {/* Avatar */}
-    <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-purple-100">
-      <img src={convo.avatarUrl} alt="" className="h-6 w-6" />
+      {/* Avatar with teacher initials */}
+      <div className="flex-shrink-0 h-12 w-12 flex items-center justify-center rounded-full bg-blue-100 text-blue-700 font-semibold">
+        {initials}
     </div>
 
     {/* Main Content */}
@@ -48,13 +59,13 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
       </div>
 
       {/* Teacher/Sender Name */}
-      {(convo.subtitle || convo.sender) && (
-        <div className="mb-2">
-          <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
-            {convo.subtitle || convo.sender}
-          </span>
-        </div>
-      )}
+        {(convo.subtitle || convo.sender) && (
+      <div className="mb-2">
+        <span className="text-xs text-gray-600 bg-gray-100 px-2 py-1 rounded-md">
+              {convo.subtitle || convo.sender}
+        </span>
+      </div>
+        )}
 
       {/* Last Message Line with Icons */}
       <div className="flex justify-between items-center">
@@ -76,6 +87,7 @@ const ConversationItem = ({ convo, isActive, onClick }) => (
     </div>
   </button>
 );
+};
 
 // Main Component
 export default function ConversationsList({
@@ -97,7 +109,7 @@ export default function ConversationsList({
       {/* Header Area */}
       <div className="p-4 space-y-4 border-b border-gray-200">
         <div className="flex items-center justify-between">
-          <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
+        <h2 className="text-2xl font-bold text-gray-900">Messages</h2>
           {onNewMessage && (
             <button
               onClick={onNewMessage}

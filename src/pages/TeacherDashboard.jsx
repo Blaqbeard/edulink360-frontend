@@ -29,17 +29,19 @@ const formatTimestamp = (value) => {
   });
 };
 
+const defaultDashboardState = {
+  stats: null,
+  recentSubmissions: [],
+  classPerformance: null,
+};
+
 function TeacherDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { unreadCount, refreshCount } = useNotifications();
   const [showMobileSidebar, setShowMobileSidebar] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const [dashboardData, setDashboardData] = useState({
-    stats: null,
-    recentSubmissions: [],
-    classPerformance: null,
-  });
+  const [dashboardData, setDashboardData] = useState(defaultDashboardState);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [teacherClasses, setTeacherClasses] = useState([]);
@@ -53,6 +55,7 @@ function TeacherDashboard() {
   const [selectedClass, setSelectedClass] = useState(null);
   const [showStudentModal, setShowStudentModal] = useState(false);
   const user = authService.getCurrentUser();
+  const [skipNextSpinner, setSkipNextSpinner] = useState(false);
 
   const isActive = (path) => location.pathname === path;
   const performanceMetrics = dashboardData.classPerformance;
@@ -61,9 +64,26 @@ function TeacherDashboard() {
       ? Math.round(performanceMetrics.completionPercentage)
       : null;
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const cached = sessionStorage.getItem("teacherDashboardCache");
+      if (!cached) return;
+      const parsed = JSON.parse(cached);
+      setDashboardData(parsed.dashboardData || defaultDashboardState);
+      setTeacherClasses(parsed.teacherClasses || []);
+      setIsLoading(false);
+      setSkipNextSpinner(true);
+    } catch (cacheError) {
+      console.warn("Unable to parse teacher dashboard cache:", cacheError);
+    }
+  }, []);
+
   const fetchDashboardData = useCallback(async () => {
     try {
-      setIsLoading(true);
+      if (!skipNextSpinner) {
+        setIsLoading(true);
+      }
       setError(null);
 
       const [dashboardSummary, classesResponse] = await Promise.all([
@@ -144,18 +164,34 @@ function TeacherDashboard() {
         ? dashboardSummary.data.recentSubmissions
         : [];
 
-      setDashboardData({
+      const nextDashboardData = {
         stats,
         recentSubmissions,
         classPerformance,
-      });
+      };
+
+      setDashboardData(nextDashboardData);
+
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          "teacherDashboardCache",
+          JSON.stringify({
+            dashboardData: nextDashboardData,
+            teacherClasses: classList,
+            timestamp: Date.now(),
+          })
+        );
+      }
     } catch (err) {
       setError(err.message || "Failed to load dashboard data");
       console.error("Teacher dashboard error:", err);
     } finally {
       setIsLoading(false);
+      if (skipNextSpinner) {
+        setSkipNextSpinner(false);
+      }
     }
-  }, []);
+  }, [skipNextSpinner]);
 
   useEffect(() => {
     fetchDashboardData();
