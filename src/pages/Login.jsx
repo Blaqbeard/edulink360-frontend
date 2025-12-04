@@ -43,8 +43,11 @@ export default function Login() {
       return;
     }
 
-    // 3️⃣ Redirect to dashboard
-    navigate("/dashboard");
+    // 3️⃣ Redirect based on user role
+    const user = JSON.parse(localStorage.getItem("user") || "{}");
+    const userRole = user?.role || "student";
+    const redirectPath = userRole === "teacher" ? "/teacher/dashboard" : "/";
+    navigate(redirectPath);
   };
 
   return (

@@ -1,7 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import Input from "../components/common/Input";
 import ToggleSwitch from "../components/common/ToggleSwitch";
+import { studentService } from "../services/studentService";
 
 const SettingItem = ({ title, description, control }) => (
   <div className="flex items-center justify-between py-4">
@@ -14,7 +15,7 @@ const SettingItem = ({ title, description, control }) => (
 );
 
 export default function Settings() {
-  const [email, setEmail] = useState("adaokafor@edulink360.com");
+  const [email, setEmail] = useState("");
   const [toggles, setToggles] = useState({
     assignmentUpdate: true,
     feedbackAlerts: true,
@@ -23,9 +24,38 @@ export default function Settings() {
     showProfile: true,
     performanceAnalytics: true,
   });
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(null);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const profile = await studentService.getProfile();
+        setEmail(profile?.email || "");
+      } catch (err) {
+        setError(
+          err?.response?.data?.message ||
+            err?.response?.data?.error ||
+            err?.message ||
+            "Unable to load settings."
+        );
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
 
   const handleToggleChange = (key) => {
     setToggles((prev) => ({ ...prev, [key]: !prev[key] }));
+    setStatus({
+      type: "info",
+      message: "Preference syncing is coming soon in the MVP roadmap.",
+    });
   };
 
   return (
@@ -45,155 +75,186 @@ export default function Settings() {
           </div>
         </div>
 
-        {/* Account Info Section */}
-        <div className="space-y-4 mb-8">
-          <Input
-            label="Email Address"
-            id="email"
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={true}
-          />
-          <a
-            href="#"
-            className="block text-sm font-medium text-blue-600 hover:underline"
+        {status && (
+          <div
+            className={`mb-6 px-4 py-2 rounded ${
+              status.type === "info"
+                ? "bg-blue-50 text-blue-700 border border-blue-100"
+                : ""
+            }`}
           >
-            Change Password
-          </a>
-        </div>
-
-        {/* Two-Factor Auth Section */}
-        <div className="flex items-center justify-between py-4 border-y mb-8">
-          <p className="font-medium text-gray-800">Two-Factor Authentication</p>
-          <button className="text-sm font-semibold bg-gray-200 text-gray-700 px-4 py-1.5 rounded-md hover:bg-gray-300">
-            Enable
-          </button>
-        </div>
-
-        {/* Notifications Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-          <h2 className="text-lg font-bold">Notifications</h2>
-          <p className="text-sm text-gray-500 mb-2">
-            Control how you stay updated with your class progress
-          </p>
-          <div className="divide-y divide-gray-100">
-            <SettingItem
-              title="Assignment Update"
-              description="Control how you stay updated with your class progress"
-              control={
-                <ToggleSwitch
-                  isOn={toggles.assignmentUpdate}
-                  onToggle={() => handleToggleChange("assignmentUpdate")}
-                />
-              }
-            />
-            <SettingItem
-              title="Feedback Alerts"
-              description="Get notified when new assignments are posted"
-              control={
-                <ToggleSwitch
-                  isOn={toggles.feedbackAlerts}
-                  onToggle={() => handleToggleChange("feedbackAlerts")}
-                />
-              }
-            />
-            <SettingItem
-              title="Message Notification"
-              description="Get notified about new messages"
-              control={
-                <ToggleSwitch
-                  isOn={toggles.messageNotification}
-                  onToggle={() => handleToggleChange("messageNotification")}
-                />
-              }
-            />
-            <SettingItem
-              title="Deadline Reminders"
-              description="Receive reminders before assignment deadline"
-              control={
-                <ToggleSwitch
-                  isOn={toggles.deadlineReminders}
-                  onToggle={() => handleToggleChange("deadlineReminders")}
-                />
-              }
-            />
+            {status.message}
           </div>
-        </div>
+        )}
 
-        {/* Privacy and Accessibility Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-          <h2 className="text-lg font-bold">Privacy and Accessibility</h2>
-          <p className="text-sm text-gray-500 mb-2">
-            Make your learning space feel like you
-          </p>
-          <div className="divide-y divide-gray-100">
-            <SettingItem
-              title="Show profile to other students"
-              description="Allow other students view your profile details"
-              control={
-                <ToggleSwitch
-                  isOn={toggles.showProfile}
-                  onToggle={() => handleToggleChange("showProfile")}
-                />
-              }
-            />
-            <SettingItem
-              title="Data Sharing"
-              control={
-                <a
-                  href="#"
-                  className="text-sm font-medium text-blue-600 hover:underline"
-                >
-                  Manage
-                </a>
-              }
-            />
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+            {error}
           </div>
-        </div>
+        )}
 
-        {/* Performance Analytics Card */}
-        <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
-          <SettingItem
-            title="Performance Analytics"
-            description="Enable detailed tracking"
-            control={
-              <ToggleSwitch
-                isOn={toggles.performanceAnalytics}
-                onToggle={() => handleToggleChange("performanceAnalytics")}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-500 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading settings...</p>
+            </div>
+          </div>
+        ) : (
+          <>
+            {/* Account Info Section */}
+            <div className="space-y-4 mb-8">
+              <Input
+                label="Email Address"
+                id="email"
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                disabled={true}
               />
-            }
-          />
-          <div className="border-t border-gray-100">
-            <SettingItem
-              title="Feedback Template"
-              control={
-                <a
-                  href="#"
-                  className="text-sm font-medium text-blue-600 hover:underline"
-                >
-                  Manage
-                </a>
-              }
-            />
-          </div>
-        </div>
+              <a
+                href="#"
+                className="block text-sm font-medium text-blue-600 hover:underline"
+              >
+                Change Password
+              </a>
+            </div>
 
-        {/* Account Actions */}
-        <div className="mt-12 space-y-2">
-          <a
-            href="#"
-            className="block text-sm font-medium text-red-600 hover:underline"
-          >
-            Deactivate Account
-          </a>
-          <a
-            href="#"
-            className="block text-sm font-medium text-red-600 hover:underline"
-          >
-            Delete Account
-          </a>
-        </div>
+            {/* Two-Factor Auth Section */}
+            <div className="flex items-center justify-between py-4 border-y mb-8">
+              <p className="font-medium text-gray-800">
+                Two-Factor Authentication
+              </p>
+              <button className="text-sm font-semibold bg-gray-200 text-gray-700 px-4 py-1.5 rounded-md hover:bg-gray-300">
+                Enable
+              </button>
+            </div>
+
+            {/* Notifications Card */}
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+              <h2 className="text-lg font-bold">Notifications</h2>
+              <p className="text-sm text-gray-500 mb-2">
+                Control how you stay updated with your class progress
+              </p>
+              <div className="divide-y divide-gray-100">
+                <SettingItem
+                  title="Assignment Update"
+                  description="Control how you stay updated with your class progress"
+                  control={
+                    <ToggleSwitch
+                      isOn={toggles.assignmentUpdate}
+                      onToggle={() => handleToggleChange("assignmentUpdate")}
+                    />
+                  }
+                />
+                <SettingItem
+                  title="Feedback Alerts"
+                  description="Get notified when new assignments are posted"
+                  control={
+                    <ToggleSwitch
+                      isOn={toggles.feedbackAlerts}
+                      onToggle={() => handleToggleChange("feedbackAlerts")}
+                    />
+                  }
+                />
+                <SettingItem
+                  title="Message Notification"
+                  description="Get notified about new messages"
+                  control={
+                    <ToggleSwitch
+                      isOn={toggles.messageNotification}
+                      onToggle={() => handleToggleChange("messageNotification")}
+                    />
+                  }
+                />
+                <SettingItem
+                  title="Deadline Reminders"
+                  description="Receive reminders before assignment deadline"
+                  control={
+                    <ToggleSwitch
+                      isOn={toggles.deadlineReminders}
+                      onToggle={() => handleToggleChange("deadlineReminders")}
+                    />
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Privacy and Accessibility Card */}
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+              <h2 className="text-lg font-bold">Privacy and Accessibility</h2>
+              <p className="text-sm text-gray-500 mb-2">
+                Make your learning space feel like you
+              </p>
+              <div className="divide-y divide-gray-100">
+                <SettingItem
+                  title="Show profile to other students"
+                  description="Allow other students view your profile details"
+                  control={
+                    <ToggleSwitch
+                      isOn={toggles.showProfile}
+                      onToggle={() => handleToggleChange("showProfile")}
+                    />
+                  }
+                />
+                <SettingItem
+                  title="Data Sharing"
+                  control={
+                    <a
+                      href="#"
+                      className="text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      Manage
+                    </a>
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Performance Analytics Card */}
+            <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+              <SettingItem
+                title="Performance Analytics"
+                description="Enable detailed tracking"
+                control={
+                  <ToggleSwitch
+                    isOn={toggles.performanceAnalytics}
+                    onToggle={() => handleToggleChange("performanceAnalytics")}
+                  />
+                }
+              />
+              <div className="border-t border-gray-100">
+                <SettingItem
+                  title="Feedback Template"
+                  control={
+                    <a
+                      href="#"
+                      className="text-sm font-medium text-blue-600 hover:underline"
+                    >
+                      Manage
+                    </a>
+                  }
+                />
+              </div>
+            </div>
+
+            {/* Account Actions */}
+            <div className="mt-12 space-y-2">
+              <a
+                href="#"
+                className="block text-sm font-medium text-red-600 hover:underline"
+              >
+                Deactivate Account
+              </a>
+              <a
+                href="#"
+                className="block text-sm font-medium text-red-600 hover:underline"
+              >
+                Delete Account
+              </a>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

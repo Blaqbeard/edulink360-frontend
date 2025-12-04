@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { BellIcon, Bars3Icon } from "@heroicons/react/24/outline";
 import { useAuth } from "../../context/AuthContext";
+import LanguageSelector from "../common/LanguageSelector";
 
 // Header now accepts a function to toggle the sidebar on mobile
 
@@ -25,6 +26,7 @@ export default function Header({ title, onMenuClick }) {
 
         {/* Right side remains the same */}
         <div className="flex items-center space-x-4 md:space-x-6">
+          <LanguageSelector />
           <button className="text-gray-500 hover:text-gray-700">
             <BellIcon className="h-6 w-6" />
           </button>

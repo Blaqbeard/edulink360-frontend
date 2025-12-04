@@ -1,48 +1,26 @@
 import React from "react";
 
-const assignments = [
-  {
-    id: 1,
-    title: "Advanced React Patterns",
-    course: "Web Development",
-    dueDate: "Due Tomorrow",
-    status: "Pending",
-    borderColor: "border-orange-400", // Color for the left border
-  },
-  {
-    id: 2,
-    title: "Data Structure Final Project",
-    course: "Computer Science",
-    dueDate: "Due in 3 days",
-    status: "Submitted",
-    borderColor: "border-blue-500",
-  },
-  {
-    id: 3,
-    title: "UX Research",
-    course: "Design Thinking",
-    dueDate: "Due in 5 days",
-    status: "Pending",
-    borderColor: "border-purple-400",
-  },
-];
+const statusStyles = {
+  pending: "bg-orange-100 text-orange-600",
+  submitted: "bg-gray-800 text-white",
+  completed: "bg-green-100 text-green-600",
+};
 
 const StatusBadge = ({ status }) => {
-  const styles = {
-    Pending: "bg-orange-400 text-white",
-    Submitted: "bg-gray-800 text-white",
-  };
+  const normalized = status?.toLowerCase();
+  const classes = statusStyles[normalized] || "bg-gray-200 text-gray-700";
   return (
-    <span
-      className={`px-3 py-1 text-xs font-semibold rounded-md ${styles[status]}`}
-    >
-      {status}
+    <span className={`px-3 py-1 text-xs font-semibold rounded-full ${classes}`}>
+      {status || "Pending"}
     </span>
   );
 };
 
-// Main Component
-export default function RecentAssignments() {
+export default function RecentAssignments({ assignments = [], items = [] }) {
+  const list =
+    Array.isArray(assignments) && assignments.length > 0 ? assignments : items;
+  const hasAssignments = Array.isArray(list) && list.length > 0;
+
   return (
     <div className="bg-white p-6 rounded-xl shadow-sm">
       {/* Card Header */}
@@ -58,22 +36,52 @@ export default function RecentAssignments() {
 
       {/* List of Assignments */}
       <div className="space-y-6">
-        {assignments.map((item) => (
-          <div
-            key={item.id}
-            className={`flex items-center space-x-4 border-l-4 ${item.borderColor} pl-4`}
-          >
-            <div className="flex-1">
-              <p className="font-bold text-gray-800">{item.title}</p>
-              <p className="text-sm text-gray-600">{item.course}</p>
-              <p className="text-xs text-gray-400 mt-1">{item.dueDate}</p>
-            </div>
-            <div className="flex-shrink-0">
-              <StatusBadge status={item.status} />
-            </div>
+        {hasAssignments ? (
+          list.slice(0, 5).map((item, index) => {
+            const title =
+              item.title ||
+              item.assignmentTitle ||
+              item.name ||
+              "Untitled Assignment";
+            const course =
+              item.course || item.courseName || item.subject || "Course";
+            const dueDateText = item.dueDate
+              ? formatDisplayDate(item.dueDate)
+              : item.dueDateText || item.dueLabel || "Due soon";
+            const status =
+              item.status || (item.submitted ? "Submitted" : "Pending");
+
+            return (
+              <div
+                key={item.id || index}
+                className="flex items-center justify-between"
+              >
+                <div>
+                  <p className="font-semibold text-gray-700">{title}</p>
+                  <p className="text-sm text-gray-500">
+                    {course} &middot; {dueDateText}
+                  </p>
+                </div>
+                <StatusBadge status={status} />
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center text-gray-500 py-8">
+            No assignments available.
           </div>
-        ))}
+        )}
       </div>
     </div>
   );
+}
+
+function formatDisplayDate(d) {
+  try {
+    const dt = new Date(d);
+    if (isNaN(dt)) return d;
+    return dt.toLocaleDateString();
+  } catch {
+    return d;
+  }
 }

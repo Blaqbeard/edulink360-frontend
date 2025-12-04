@@ -1,5 +1,5 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import API from "../api/axios";
+import API from "../config/api";
 
 export const AuthContext = createContext();
 
@@ -21,8 +21,9 @@ export const AuthProvider = ({ children }) => {
         return { success: false, message: "Invalid backend response format." };
       }
 
-      // Save to localStorage
+      // Save to localStorage (support both token names for compatibility)
       localStorage.setItem("token", token);
+      localStorage.setItem("authToken", token);
       localStorage.setItem("user", JSON.stringify(userData));
 
       setUser(userData);
@@ -64,6 +65,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem("token");
+    localStorage.removeItem("authToken");
     localStorage.removeItem("user");
     setUser(null);
   };

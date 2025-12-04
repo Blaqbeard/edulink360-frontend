@@ -8,7 +8,7 @@ export default function ToggleSwitch({ isOn, onToggle, id }) {
       aria-checked={isOn}
       onClick={onToggle}
       // 1. Adjusted size and colors to match the design
-      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500
+      className={`relative inline-flex items-center h-6 rounded-full w-11 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500
         ${isOn ? "bg-gray-800" : "bg-gray-200"}
       `}
     >

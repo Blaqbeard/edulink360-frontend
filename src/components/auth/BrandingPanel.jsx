@@ -13,12 +13,12 @@ export default function BrandingPanel() {
 
       {/* Main Text */}
       <div className="mt-10">
-        <h1 className="text-4xl font-bold leading-snug">
+        <h1 className="text-4xl font-extrabold leading-snug tracking-tight">
           Step into your classroom,
           <span className="text-orange-400"> anywhere!</span>
         </h1>
 
-        <p className="mt-4 text-lg text-gray-300 leading-relaxed">
+        <p className="mt-4 text-lg text-gray-200 leading-relaxed font-medium">
           Stay linked to what matters...learning!
         </p>
 
